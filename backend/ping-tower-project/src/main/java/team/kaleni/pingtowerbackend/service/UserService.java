@@ -3,8 +3,10 @@ package team.kaleni.pingtowerbackend.service;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import team.kaleni.pingtowerbackend.dto.mapper.UserMapper;
+import team.kaleni.pingtowerbackend.dto.request.user.UserCredentialsDto;
 import team.kaleni.pingtowerbackend.dto.request.user.UserInsertDtoRequest;
 import team.kaleni.pingtowerbackend.dto.request.user.UserUpdateDtoRequest;
 import team.kaleni.pingtowerbackend.dto.response.UserDtoResponse;
@@ -20,6 +22,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public UserDtoResponse insert(UserInsertDtoRequest userInsertDtoRequest) {
         User user = userMapper.toDomain(userInsertDtoRequest);
@@ -54,9 +57,24 @@ public class UserService {
         }
 
         User user = optId.get();
-        userMapper.mapUpdateRequestToUser(user, userUpdateDtoRequest);
+        user.setUsername(userUpdateDtoRequest.getUsername());
+        user.setPasswordHash(passwordEncoder.encode(userUpdateDtoRequest.getPassword()));
 
         return userMapper.toDto(userRepository.saveAndFlush(user));
+    }
+
+    public boolean signIn(UserCredentialsDto userCredentialsDto) {
+
+        // проверяем есть ли пользователь с таким email-ом
+        Optional<User> optEmail = userRepository.findByEmail(userCredentialsDto.getEmail());
+        if (optEmail.isEmpty()) {
+            return false;
+        }
+
+        User user = optEmail.get();
+
+        // проверяем совпадают ли пароли
+        return passwordEncoder.matches(userCredentialsDto.getPassword(), user.getPasswordHash());
     }
 
     public UserDtoResponse findById(Long id) {

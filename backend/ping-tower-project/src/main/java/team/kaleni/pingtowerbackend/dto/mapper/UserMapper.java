@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import team.kaleni.pingtowerbackend.dto.request.user.UserInsertDtoRequest;
-import team.kaleni.pingtowerbackend.dto.request.user.UserUpdateDtoRequest;
 import team.kaleni.pingtowerbackend.dto.response.UserDtoResponse;
 import team.kaleni.pingtowerbackend.entity.User;
 
@@ -30,10 +29,5 @@ public class UserMapper implements BaseDtoDomainMapper<UserInsertDtoRequest, Use
                 .email(requestDto.getEmail())
                 .passwordHash(passwordEncoder.encode(requestDto.getPassword()))
                 .build();
-    }
-
-    public void mapUpdateRequestToUser(User user, UserUpdateDtoRequest updateDtoRequest) {
-        user.setUsername(updateDtoRequest.getUsername());
-        user.setPasswordHash(passwordEncoder.encode(updateDtoRequest.getPassword()));
     }
 }
