@@ -25,7 +25,7 @@ services:
     depends_on:
       - postgres
     ports:
-      - "${BACKEND_PORT}:${BACKEND_DOCKER_PORT}"
+      - "${USER_SERVICE_PORT}:${USER_SERVICE_DOCKER_PORT}"
     networks:
       - app-network
 volumes:
