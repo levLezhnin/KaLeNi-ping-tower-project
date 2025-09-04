@@ -1,8 +1,6 @@
 spring:
   application:
     name: Ping-Tower-Backend-User-Service
-  config:
-    import: optional:file:.env[.properties]
   datasource:
     url: jdbc:postgresql://${POSTGRES_DB_URL}:${POSTGRES_DB_PORT}/${POSTGRES_DB_NAME}
     username: ${POSTGRES_DB_USERNAME}
