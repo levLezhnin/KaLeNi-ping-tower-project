@@ -11,6 +11,17 @@ services:
       - "${POSTGRES_DB_PORT}:${POSTGRES_DB_DOCKER_PORT}"
     networks:
       - app-network
+  db-migration:
+    image: liquibase/liquibase
+    volumes:
+      - ./db-migration:/liquibase/changelog
+    environment:
+      - LIQUIBASE_URL=jdbc:postgresql://${POSTGRES_DB_URL}:${POSTGRES_DB_PORT}/${POSTGRES_DB_NAME}
+      - LIQUIBASE_USER=${POSTGRES_DB_USERNAME}
+      - LIQUIBASE_PASSWORD=${POSTGRES_DB_PASSWORD}
+      - LIQUIBASE_CHANGELOG=/liquibase/changelog/db.changelog-master.yaml
+    depends_on:
+      - postgres
   user-service:
     build:
       context: ./user-service
@@ -23,7 +34,7 @@ services:
       POSTGRES_DB_PORT: ${POSTGRES_DB_PORT}
       POSTGRES_DB_DOCKER_PORT: ${POSTGRES_DB_DOCKER_PORT}
     depends_on:
-      - postgres
+      - db-migration
     ports:
       - "${USER_SERVICE_PORT}:${USER_SERVICE_DOCKER_PORT}"
     networks:
