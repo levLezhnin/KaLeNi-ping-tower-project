@@ -25,9 +25,16 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	// Web, Controllers
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	// Swagger
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.3'
+
+	// Databases
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	//Lombok
 	compileOnly 'org.projectlombok:lombok'
+
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
