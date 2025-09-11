@@ -6,7 +6,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,6 +16,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MonitorGroup {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -33,12 +33,9 @@ public class MonitorGroup {
     @UpdateTimestamp
     private Instant updatedAt;
 
-    // Связи
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private Integer owner;
+    @Column(name = "owner_id", nullable = false)
+    private Integer ownerId;  // User id
 
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Monitor> monitors = new HashSet<>();
+    private Set<Monitor> monitors = new HashSet<>();  // Добавлен generic type
 }
-

@@ -15,10 +15,10 @@ import java.util.Optional;
 public interface MonitorRepository extends JpaRepository<Monitor, Long> {
 
     // Find by owner (most common query)
-    List<Monitor> findByOwner(Integer owner);
+    List<Monitor> findByOwnerId(Integer ownerId);
 
     // Find by owner and enabled status
-    List<Monitor> findByOwnerAndEnabled(Integer owner, Boolean enabled);
+    List<Monitor> findByOwnerIdAndEnabled(Integer ownerId, Boolean enabled);
 
     // Find enabled monitors (for ping service)
     List<Monitor> findByEnabledTrue();
@@ -30,22 +30,22 @@ public interface MonitorRepository extends JpaRepository<Monitor, Long> {
     List<Monitor> findByGroup(MonitorGroup group);
 
     // Find by owner and group
-    List<Monitor> findByOwnerAndGroup(Integer owner, MonitorGroup group);
+    List<Monitor> findByOwnerIdAndGroup(Integer ownerId, MonitorGroup group);
 
     // Find by name and owner (for unique constraint validation)
-    Optional<Monitor> findByOwnerAndName(Integer owner, String name);
+    Optional<Monitor> findByOwnerIdAndName(Integer ownerId, String name);
 
     // Find monitors with target information (join fetch for performance)
-    @Query("SELECT m FROM Monitor m JOIN FETCH m.target WHERE m.owner = :owner")
-    List<Monitor> findByOwnerWithTarget(@Param("owner") Integer owner);
+    @Query("SELECT m FROM Monitor m JOIN FETCH m.target WHERE m.ownerId = :ownerId")
+    List<Monitor> findByOwnerIdWithTarget(@Param("ownerId") Integer ownerId);
 
     // Find monitors with group information
-    @Query("SELECT m FROM Monitor m LEFT JOIN FETCH m.group WHERE m.owner = :owner")
-    List<Monitor> findByOwnerWithGroup(@Param("owner") Integer owner);
+    @Query("SELECT m FROM Monitor m LEFT JOIN FETCH m.group WHERE m.ownerId = :ownerId")
+    List<Monitor> findByOwnerIDWithGroup(@Param("ownerId") Integer ownerId);
 
     // Count monitors by owner (for plan limits)
-    long countByOwner(Integer owner);
+    long countByOwnerId(Integer ownerId);
 
     // Count enabled monitors by owner
-    long countByOwnerAndEnabledTrue(Integer owner);
+    long countByOwnerIdAndEnabledTrue(Integer ownerId);
 }

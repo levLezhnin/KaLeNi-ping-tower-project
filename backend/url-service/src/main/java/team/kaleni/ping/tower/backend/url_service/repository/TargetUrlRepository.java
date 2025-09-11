@@ -17,10 +17,6 @@ public interface TargetUrlRepository extends JpaRepository<TargetUrl, Long> {
     // Find by normalized URL (most important for avoiding duplicates)
     Optional<TargetUrl> findByUrl(String normalizedUrl);
 
-    // Find targets ready for ping (critical for ping service)
-    @Query("SELECT t FROM TargetUrl t WHERE t.nextPingAt <= :now ORDER BY t.nextPingAt ASC")
-    List<TargetUrl> findTargetsReadyForPing(@Param("now") Instant now);
-
     // Find by status (for dashboard queries)
     List<TargetUrl> findByLastStatus(PingStatus status);
 

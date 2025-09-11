@@ -31,7 +31,7 @@ public class MonitorController {
                             content = @Content)
             }
     )
-    @PostMapping
+    @PostMapping("register")
     public ResponseEntity<MonitorResponse> createMonitor(
             @Parameter(description = "Temporary: owner id header (replace with auth later)", example = "42")
             @RequestHeader("X-Owner-Id") Integer ownerId,

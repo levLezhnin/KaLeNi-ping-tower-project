@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 @Data
-@Schema(title = "Monitor for a specific url")
+@Schema(title = "CreateMonitorRequest")
 public class CreateMonitorRequest {
 
     @NotBlank(message = "Monitor name is required")

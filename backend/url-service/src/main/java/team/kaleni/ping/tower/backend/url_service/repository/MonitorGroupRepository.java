@@ -13,18 +13,18 @@ import java.util.Optional;
 public interface MonitorGroupRepository extends JpaRepository<MonitorGroup, Long> {
 
     // Find by owner
-    List<MonitorGroup> findByOwner(Integer owner);
+    List<MonitorGroup> findByOwnerId(Integer ownerId);
 
     // Find by owner and name (for unique validation within user)
-    Optional<MonitorGroup> findByOwnerAndName(Integer owner, String name);
+    Optional<MonitorGroup> findByOwnerIdAndName(Integer ownerId, String name);
 
     // Find by owner and id (for security - ensure user owns the group)
-    Optional<MonitorGroup> findByIdAndOwner(Long id, Integer owner);
+    Optional<MonitorGroup> findByIdAndOwnerId(Long id, Integer ownerId);
 
     // Find groups with their monitors (for dashboard)
-    @Query("SELECT g FROM MonitorGroup g LEFT JOIN FETCH g.monitors WHERE g.owner = :owner")
-    List<MonitorGroup> findByOwnerWithMonitors(@Param("owner") Integer owner);
+    @Query("SELECT g FROM MonitorGroup g LEFT JOIN FETCH g.monitors WHERE g.ownerId = :ownerId")
+    List<MonitorGroup> findByOwnerIdWithMonitors(@Param("ownerId") Integer ownerId);
 
     // Count groups by owner
-    long countByOwner(Integer owner);
+    long countByOwnerId(Integer ownerId);
 }

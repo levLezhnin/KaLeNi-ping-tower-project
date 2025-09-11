@@ -1,6 +1,5 @@
 package team.kaleni.ping.tower.backend.url_service.service;
 
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +12,7 @@ import team.kaleni.ping.tower.backend.url_service.repository.MonitorGroupReposit
 import team.kaleni.ping.tower.backend.url_service.repository.MonitorRepository;
 import team.kaleni.ping.tower.backend.url_service.repository.TargetUrlRepository;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -39,14 +39,15 @@ public class MonitorService {
                 });
 
         // 2) Unique monitor name per owner enforced by constraint (owner_id, name)
-        Optional<Monitor> existingByName = monitorRepository.findByOwnerAndName(ownerId, req.getName());
+        Optional<Monitor> existingByName = monitorRepository.findByOwnerIdAndName(ownerId, req.getName());
         if (existingByName.isPresent()) {
             throw new IllegalArgumentException("Monitor with the same name already exists for this owner");
         }
         // 2.2) Build Monitor entity (enabled by default)
         Monitor monitor = Monitor.builder()
                 .name(req.getName())
-                .owner(ownerId)
+                .ownerId(ownerId)
+                .target(target)
                 .description(req.getDescription())
                 .intervalSeconds(req.getIntervalSeconds())
                 .enabled(true)
@@ -58,7 +59,7 @@ public class MonitorService {
         MonitorGroup group = null;
         if (req.getGroupId() != null) {
             group = monitorGroupRepository.findById(req.getGroupId())
-                    .filter(g -> g.getOwner().equals(ownerId))
+                    .filter(g -> Objects.equals(g.getOwnerId(), ownerId))
                     .orElseThrow(() -> new IllegalArgumentException("Group not found or not owned by user"));
         }
         monitor.setGroup(group);

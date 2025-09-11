@@ -7,50 +7,44 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
 import java.time.Instant;
 
 @Entity
 @Table(name = "monitors",
         uniqueConstraints = @UniqueConstraint(columnNames = {"owner_id", "name"}),
         indexes = {
-        @Index(name = "idx_monitor_owner", columnList = "owner", unique = true),
-        @Index(name = "idx_monitor_target_id", columnList = "target_id"),
-        @Index(name = "idx_monitor_group_id", columnList = "group_id", unique = false)
+                @Index(name = "idx_monitor_owner", columnList = "owner_id"),  // Fixed: was "owner"
+                @Index(name = "idx_monitor_target_id", columnList = "target_id"),
+                @Index(name = "idx_monitor_group_id", columnList = "group_id")
         })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Monitor {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
-    private String name; // пользовательское имя монитора
+    private String name;
 
     @Column(length = 1000)
     private String description;
 
     // Настройки проверки
     @Column(nullable = false)
-    private Integer intervalSeconds = 300; // 5 минут по умолчанию
+    @Builder.Default
+    private Integer intervalSeconds = 300;
 
     @Column(nullable = false)
-    private Integer timeoutMs = 10000; // 10 секунд
+    @Builder.Default
+    private Integer timeoutMs = 10000;
 
     @Column(nullable = false)
-    private Boolean enabled = true; // todo: should check if any of other monitors are also down
-
-//    // HTTP специфичные настройки (хранятся как JSON)
-//    @JdbcTypeCode(SqlTypes.JSON)
-//    @Column(columnDefinition = "jsonb")
-//    private HttpSettings httpSettings;
-
-//    // Настройки уведомлений
-//    @Column(nullable = false)
-//    private Boolean notificationsEnabled = true;
+    @Builder.Default
+    private Boolean enabled = true;
 
     // Метаданные
     @CreationTimestamp
@@ -59,10 +53,8 @@ public class Monitor {
     @UpdateTimestamp
     private Instant updatedAt;
 
-    // Связи
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
-    private Integer owner;
+    @Column(name = "owner_id", nullable = false)
+    private Integer ownerId;  // user id
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "target_id", nullable = false)
@@ -72,4 +64,3 @@ public class Monitor {
     @JoinColumn(name = "group_id")
     private MonitorGroup group;
 }
-
