@@ -162,6 +162,7 @@ public class MonitorService {
         log.info("Monitor {} {} for owner {}", monitorId, enabled ? "enabled" : "disabled", ownerId);
     }
 
+
     private MonitorDetailResponse mapToDetailResponse(Monitor monitor) {
         TargetUrl target = monitor.getTarget();
         MonitorGroup group = monitor.getGroup();
