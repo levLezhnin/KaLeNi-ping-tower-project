@@ -25,6 +25,12 @@ public interface MonitorGroupRepository extends JpaRepository<MonitorGroup, Long
     @Query("SELECT g FROM MonitorGroup g LEFT JOIN FETCH g.monitors WHERE g.ownerId = :ownerId")
     List<MonitorGroup> findByOwnerIdWithMonitors(@Param("ownerId") Integer ownerId);
 
+    // Find by name and owner excluding specific ID (for update validation)
+    @Query("SELECT g FROM MonitorGroup g WHERE g.ownerId = :ownerId AND g.name = :name AND g.id != :excludeId")
+    Optional<MonitorGroup> findByOwnerIdAndNameExcludingId(@Param("ownerId") Integer ownerId,
+                                                           @Param("name") String name,
+                                                           @Param("excludeId") Long excludeId);
+
     // Count groups by owner
     long countByOwnerId(Integer ownerId);
 }

@@ -50,6 +50,8 @@ public interface MonitorRepository extends JpaRepository<Monitor, Long> {
     // Count monitors using specific target
     long countByTarget(TargetUrl target);
 
+    // Count monitors that are in a specific group
+    long countByGroup(MonitorGroup group);
 
     // Count monitors by owner (for plan limits)
     long countByOwnerId(Integer ownerId);

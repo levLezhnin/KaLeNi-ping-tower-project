@@ -105,6 +105,12 @@ public class MonitorService {
                 .toList();
     }
 
+    public List<MonitorDetailResponse> getMonitorsWithinGroup(MonitorGroup group){
+        List<Monitor> monitors = monitorRepository.findByGroup(group);
+        List<MonitorDetailResponse> responses = monitors.stream().map(this::mapToDetailResponse).toList();
+        return responses;
+    }
+
     @Transactional
     public MonitorDetailResponse updateMonitor(Integer ownerId, Long monitorId, UpdateMonitorRequest req) {
         // Find existing monitor and verify ownership
@@ -155,7 +161,6 @@ public class MonitorService {
         monitorRepository.save(monitor);
         log.info("Monitor {} {} for owner {}", monitorId, enabled ? "enabled" : "disabled", ownerId);
     }
-
 
     private MonitorDetailResponse mapToDetailResponse(Monitor monitor) {
         TargetUrl target = monitor.getTarget();
