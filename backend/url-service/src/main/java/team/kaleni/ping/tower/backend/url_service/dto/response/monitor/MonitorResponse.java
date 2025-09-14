@@ -1,4 +1,4 @@
-package team.kaleni.ping.tower.backend.url_service.dto.response;
+package team.kaleni.ping.tower.backend.url_service.dto.response.monitor;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;

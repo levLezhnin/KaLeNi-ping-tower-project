@@ -45,9 +45,4 @@ public class TargetUrl {
     @OneToMany(mappedBy = "target", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Monitor> monitors = new HashSet<>();
 
-    @PrePersist
-    @PreUpdate
-    private void normalizeUrl() {
-        this.url = URLNormalizer.normalize(this.url);
-    }
 }

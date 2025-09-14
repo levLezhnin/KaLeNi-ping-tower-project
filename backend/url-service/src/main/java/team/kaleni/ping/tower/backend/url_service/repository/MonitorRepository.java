@@ -43,6 +43,14 @@ public interface MonitorRepository extends JpaRepository<Monitor, Long> {
     @Query("SELECT m FROM Monitor m LEFT JOIN FETCH m.group WHERE m.ownerId = :ownerId")
     List<Monitor> findByOwnerIDWithGroup(@Param("ownerId") Integer ownerId);
 
+    // Find by ID and owner (for security)
+    @Query("SELECT m FROM Monitor m JOIN FETCH m.target LEFT JOIN FETCH m.group WHERE m.id = :id AND m.ownerId = :ownerId")
+    Optional<Monitor> findByIdAndOwnerId(@Param("id") Long id, @Param("ownerId") Integer ownerId);
+
+    // Count monitors using specific target
+    long countByTarget(TargetUrl target);
+
+
     // Count monitors by owner (for plan limits)
     long countByOwnerId(Integer ownerId);
 

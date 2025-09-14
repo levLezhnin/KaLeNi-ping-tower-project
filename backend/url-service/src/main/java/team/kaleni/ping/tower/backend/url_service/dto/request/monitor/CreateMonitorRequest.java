@@ -1,4 +1,4 @@
-package team.kaleni.ping.tower.backend.url_service.dto.request;
+package team.kaleni.ping.tower.backend.url_service.dto.request.monitor;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
