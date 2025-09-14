@@ -1,6 +1,7 @@
 package team.kaleni.ping.tower.backend.url_service.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import team.kaleni.ping.tower.backend.url_service.dto.request.CreateMonitorRequest;
@@ -18,16 +19,23 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class MonitorService {
 
     private final MonitorRepository monitorRepository;
     private final TargetUrlRepository targetUrlRepository;
     private final MonitorGroupRepository monitorGroupRepository;
+    private final PingService pingService;
 
     @Transactional
     public MonitorResponse createMonitor(Integer ownerId, CreateMonitorRequest req) {
-        // 1) Normalize URL and find or create TargetUrl
+        // 0) Normalize URL and test for correctness:
         String normalized = URLNormalizer.normalize(req.getUrl());
+        if (!testUrl(normalized)){
+            log.error("The url {} is not valid!", normalized);
+            return MonitorResponse.builder().result(false).url(normalized).build();
+        }
+        // 1) Find or create TargetUrl
         AtomicBoolean newlyCreatedTarget = new AtomicBoolean(false);
         TargetUrl target = targetUrlRepository.findByUrl(normalized)
                 .orElseGet(() -> {
@@ -37,7 +45,6 @@ public class MonitorService {
                     newlyCreatedTarget.set(true);
                     return saved;
                 });
-
         // 2) Unique monitor name per owner enforced by constraint (owner_id, name)
         Optional<Monitor> existingByName = monitorRepository.findByOwnerIdAndName(ownerId, req.getName());
         if (existingByName.isPresent()) {
@@ -66,6 +73,7 @@ public class MonitorService {
         Monitor saved = monitorRepository.save(monitor);
         // 5) Map to new minimal response
         return MonitorResponse.builder()
+                .result(true)
                 .id(saved.getId())
                 .url(target.getUrl())
                 .newlyCreatedTarget(newlyCreatedTarget.get())
@@ -73,6 +81,10 @@ public class MonitorService {
                 .groupId(saved.getGroup() != null ? saved.getGroup().getId() : null)
                 .enabled(saved.getEnabled())
                 .build();
+    }
+
+    private boolean testUrl(String url){
+        return pingService.pingURL(url);
     }
 }
 

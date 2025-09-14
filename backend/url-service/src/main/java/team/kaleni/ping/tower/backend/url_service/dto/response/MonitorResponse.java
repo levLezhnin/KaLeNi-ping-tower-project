@@ -9,6 +9,9 @@ import lombok.Data;
 @Schema(name = "MonitorResponse", description = "Created monitor payload")
 public class MonitorResponse {
 
+    @Schema(description = "True or False depends on registration", example = "True")
+    private boolean result;
+
     @Schema(description = "Monitor id", example = "123")
     private Long id;
 

@@ -6,7 +6,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 
-@Component
+
 public class URLNormalizer {
     public static String normalize(String url) {
         try {
