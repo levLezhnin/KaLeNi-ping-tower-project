@@ -38,6 +38,6 @@ out/
 .vscode/
 
 ### Env
-.env
+#.env
 .DS_Store
 **/.DS_Store
