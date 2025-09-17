@@ -15,6 +15,7 @@ import team.kaleni.ping.tower.backend.url_service.repository.MonitorGroupReposit
 import team.kaleni.ping.tower.backend.url_service.repository.MonitorRepository;
 import team.kaleni.ping.tower.backend.url_service.repository.TargetUrlRepository;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -59,6 +60,8 @@ public class MonitorService {
                 .name(req.getName())
                 .ownerId(ownerId)
                 .target(target)
+                .nextPingAt(null) // let it ping right after new addition to the db
+//                .nextPingAt(Instant.now().plusSeconds(req.getIntervalSeconds()))
                 .description(req.getDescription())
                 .intervalSeconds(req.getIntervalSeconds())
                 .enabled(true)

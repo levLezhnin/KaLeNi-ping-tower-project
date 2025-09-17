@@ -1,6 +1,7 @@
 package team.kaleni.ping.tower.backend.url_service.entity;
 
 import jakarta.persistence.*;
+import jdk.jfr.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -52,6 +53,10 @@ public class Monitor {
 
     @UpdateTimestamp
     private Instant updatedAt;
+
+    @Timestamp
+    @Column(nullable = true)
+    private Instant nextPingAt;
 
     @Column(name = "owner_id", nullable = false)
     private Integer ownerId;  // user id
