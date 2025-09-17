@@ -1,101 +1,131 @@
 import type { UrlItem } from "../types/index";
+import { monitorService, type MonitorDetailResponse } from "./monitorService";
 
-const STORAGE_KEY = "monitorpro_urls_v1";
+// Store client-only metadata separately: pinned and check history by monitor id
+const META_KEY = "monitorpro_meta_v1";
 
-const seed: UrlItem[] = [
-  {
-    id: "1",
-    name: "Google",
-    url: "https://google.com",
-    status: "up",
-    pinned: true,
-    interval: 60,
-    lastResponse: "200 OK",
-    history: [
-      { ts: new Date().toISOString(), ok: true, code: 200 },
-    ],
-  },
-  {
-    id: "2",
-    name: "Example",
-    url: "https://example.com",
-    status: "down",
-    pinned: false,
-    interval: 120,
-    lastResponse: "500",
-    history: [
-      { ts: new Date().toISOString(), ok: false, code: 500 },
-    ],
-  },
-];
+type UrlMeta = {
+  pinnedIds: Record<string, boolean>;
+  histories: Record<string, { ts: string; ok: boolean; code?: number }[]>;
+};
 
-function load(): UrlItem[] {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
-    return seed;
-  }
+function loadMeta(): UrlMeta {
+  const raw = localStorage.getItem(META_KEY);
+  if (!raw) return { pinnedIds: {}, histories: {} };
   try {
-    return JSON.parse(raw) as UrlItem[];
+    const parsed = JSON.parse(raw) as UrlMeta;
+    return {
+      pinnedIds: parsed.pinnedIds || {},
+      histories: parsed.histories || {},
+    };
   } catch {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seed));
-    return seed;
+    return { pinnedIds: {}, histories: {} };
   }
 }
 
-function save(urls: UrlItem[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(urls));
+function saveMeta(meta: UrlMeta) {
+  localStorage.setItem(META_KEY, JSON.stringify(meta));
+}
+
+function mapStatus(status?: string): UrlItem["status"] {
+  if (status === "UP") return "up";
+  if (status === "DOWN") return "down";
+  return "unknown";
+}
+
+function mapMonitorToUrlItem(m: MonitorDetailResponse, meta: UrlMeta): UrlItem {
+  const id = String(m.id);
+  return {
+    id,
+    name: m.name,
+    url: m.url,
+    status: mapStatus(m.currentStatus),
+    pinned: Boolean(meta.pinnedIds[id]),
+    interval: m.intervalSeconds,
+    lastResponse: undefined,
+    history: meta.histories[id] || [],
+  };
 }
 
 export const urlService = {
   getAll: async (): Promise<UrlItem[]> => {
-    await new Promise((r) => setTimeout(r, 200));
-    return load();
+    const meta = loadMeta();
+    const list = await monitorService.list();
+    return list.map((m) => mapMonitorToUrlItem(m, meta));
   },
 
   getById: async (id: string): Promise<UrlItem | undefined> => {
-    await new Promise((r) => setTimeout(r, 150));
-    return load().find((u) => u.id === id);
+    const meta = loadMeta();
+    try {
+      const m = await monitorService.get(Number(id));
+      return mapMonitorToUrlItem(m, meta);
+    } catch {
+      return undefined;
+    }
   },
 
   add: async (item: UrlItem): Promise<UrlItem> => {
-    const urls = load();
-    urls.push(item);
-    save(urls);
-    return item;
+    const payload = {
+      name: item.name,
+      description: undefined as string | undefined,
+      url: item.url,
+      intervalSeconds: item.interval,
+      timeoutMs: undefined as number | undefined,
+      groupId: undefined as number | undefined,
+    };
+    const created = await monitorService.create(payload);
+    if (!created.id) throw new Error("Failed to create monitor");
+    const meta = loadMeta();
+    // persist pinned choice if set on create
+    if (item.pinned) meta.pinnedIds[String(created.id)] = true;
+    saveMeta(meta);
+    const detail = await monitorService.get(created.id);
+    return mapMonitorToUrlItem(detail, meta);
   },
 
   update: async (id: string, patch: Partial<UrlItem>): Promise<UrlItem | undefined> => {
-    const urls = load();
-    const idx = urls.findIndex((u) => u.id === id);
-    if (idx === -1) return undefined;
-    urls[idx] = { ...urls[idx], ...patch };
-    save(urls);
-    return urls[idx];
+    const meta = loadMeta();
+    const numericId = Number(id);
+    // Handle pinned locally without backend call
+    if (typeof patch.pinned === "boolean") {
+      meta.pinnedIds[id] = patch.pinned;
+      saveMeta(meta);
+    }
+    const toSend: Partial<{ name: string; url: string; intervalSeconds: number; timeoutMs?: number; groupId?: number; }> = {};
+    if (typeof patch.name === "string") toSend.name = patch.name;
+    if (typeof patch.url === "string") toSend.url = patch.url;
+    if (typeof patch.interval === "number") toSend.intervalSeconds = patch.interval;
+    if (Object.keys(toSend).length > 0) {
+      await monitorService.update(numericId, toSend);
+    }
+    const detail = await monitorService.get(numericId);
+    return mapMonitorToUrlItem(detail, loadMeta());
   },
 
   remove: async (id: string): Promise<boolean> => {
-    let urls = load();
-    urls = urls.filter((u) => u.id !== id);
-    save(urls);
+    const numericId = Number(id);
+    await monitorService.remove(numericId);
+    const meta = loadMeta();
+    delete meta.pinnedIds[id];
+    delete meta.histories[id];
+    saveMeta(meta);
     return true;
   },
 
-  // simulate a check (random result)
+  // There is no explicit "check now" endpoint; emulate by refetching and appending a synthetic record
   checkNow: async (id: string): Promise<UrlItem | undefined> => {
-    const urls = load();
-    const idx = urls.findIndex((u) => u.id === id);
-    if (idx === -1) return undefined;
-    // random ping
-    const ok = Math.random() > 0.25; // 75% up
-    const ts = new Date().toISOString();
-    const code = ok ? 200 : 500;
-    const record = { ts, ok, code };
-    const u = urls[idx];
-    u.status = ok ? "up" : "down";
-    u.lastResponse = `${code}${ok ? " OK" : ""}`;
-    u.history = [record, ...(u.history || [])].slice(0, 200);
-    save(urls);
-    return u;
+    const numericId = Number(id);
+    const meta = loadMeta();
+    try {
+      const detail = await monitorService.get(numericId);
+      const statusOk = detail.currentStatus === "UP";
+      const record = { ts: new Date().toISOString(), ok: Boolean(statusOk) };
+      const arr = [record, ...(meta.histories[id] || [])].slice(0, 200);
+      meta.histories[id] = arr;
+      saveMeta(meta);
+      return mapMonitorToUrlItem(detail, meta);
+    } catch {
+      return undefined;
+    }
   },
 };
