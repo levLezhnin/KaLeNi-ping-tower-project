@@ -13,9 +13,7 @@ To install all dependencies and run the project execute these commands.
 Important!!! Execute it from frontend folder, because there are some files that will be generated in root folder and it is bad
 
 ```bash
-cd frontend
-npm install
-npm run dev
+docker-compose up --build
 ```
 Then, open this localhost:
 [http://localhost:5173/](http://localhost:5173/)
