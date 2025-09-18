@@ -1,4 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { authService } from "../services/authService";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -27,9 +28,8 @@ export default function Header() {
                 <Link
                   key={item.name}
                   to={item.path}
-                  className={`font-medium ${
-                    isActive ? "text-green-600" : "text-gray-600 hover:text-gray-900"
-                  }`}
+                  className={`font-medium ${isActive ? "text-green-600" : "text-gray-600 hover:text-gray-900"
+                    }`}
                 >
                   {item.name}
                 </Link>
@@ -38,12 +38,24 @@ export default function Header() {
           </nav>
 
           <div className="flex items-center space-x-3">
-            <button
-              onClick={() => navigate("/login")}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Войти
-            </button>
+            {authService.isAuthenticated() ? (
+              <>
+                <span className="text-gray-600 hidden sm:inline">{authService.getEmail()}</span>
+                <button
+                  onClick={() => { authService.logout(); navigate("/"); }}
+                  className="bg-gray-100 text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Выйти
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => navigate("/register")}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Регистрация
+              </button>
+            )}
           </div>
         </div>
       </div>

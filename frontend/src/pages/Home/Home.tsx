@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { authService } from "../../services/authService";
 
 export default function Home() {
   return (
@@ -16,18 +17,21 @@ export default function Home() {
           </p>
 
           <div className="flex justify-center gap-4">
-            <Link
-              to="/dashboard"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700"
-            >
-              Дашборд
-            </Link>
-            <Link
-              to="/register"
-              className="border border-gray-300 px-6 py-3 rounded-lg text-gray-900 hover:bg-gray-100"
-            >
-              Регистрация
-            </Link>
+            {authService.isAuthenticated() ? (
+              <Link
+                to="/dashboard"
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700"
+              >
+                Перейти в дашборд
+              </Link>
+            ) : (
+              <Link
+                to="/register"
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700"
+              >
+                Регистрация
+              </Link>
+            )}
           </div>
         </div>
       </section>
