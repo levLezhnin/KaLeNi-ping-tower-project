@@ -2,14 +2,17 @@ package team.kaleni.ping.tower.backend.url_service.dto.request.monitor;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import team.kaleni.ping.tower.backend.url_service.entity.HttpMethod;
+
+import java.util.Map;
 
 @Data
 @Schema(name = "UpdateMonitorRequest")
 public class UpdateMonitorRequest {
 
+    // Basic fields
     @Size(max = 255, message = "Name must be at most 255 characters")
     @Schema(description = "Monitor name", example = "Updated Website Monitor")
     private String name;
@@ -18,7 +21,25 @@ public class UpdateMonitorRequest {
     @Schema(description = "Monitor description", example = "Updated description")
     private String description;
 
-    @NotNull(message = "Interval is required")
+    @Size(max = 2048, message = "URL must be at most 2048 characters")
+    @Schema(description = "Target URL", example = "https://api.updated.com/health")
+    private String url;
+
+    @Schema(description = "HTTP method", example = "POST")
+    private HttpMethod method;
+
+    @Schema(description = "Custom HTTP headers")
+    private Map<String, String> headers;
+
+    @Size(max = 4000, message = "Request body must be at most 4000 characters")
+    @Schema(description = "Request body for POST requests", example = "{\"updated\": \"data\"}")
+    private String requestBody;
+
+    @Size(max = 100)
+    @Schema(description = "Content-Type header", example = "application/json")
+    private String contentType;
+
+    // Monitoring Configuration
     @Min(value = 30, message = "Interval must be at least 30 seconds")
     @Schema(description = "Check interval in seconds", example = "180")
     private Integer intervalSeconds;

@@ -17,9 +17,15 @@ public class DeleteResponse {
     @Schema(description = "Deleted monitor ID", example = "123")
     private Long deletedId;
 
+    @Schema(description = "Deleted monitor name", example = "API Health Check")
+    private String deletedName;
+
     @Schema(description = "Deletion timestamp")
     private Instant deletedAt;
 
-    @Schema(description = "Additional cleanup performed", example = "Orphaned target URL removed")
+    @Schema(description = "Number of ping records deleted", example = "1247")
+    private Integer deletedRecords;
+
+    @Schema(description = "Additional cleanup information", example = "Monitor successfully removed from all groups")
     private String message;
 }

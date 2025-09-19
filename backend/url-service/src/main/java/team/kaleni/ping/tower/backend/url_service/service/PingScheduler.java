@@ -55,6 +55,7 @@ public class PingScheduler {
                 },
                 new ThreadPoolExecutor.CallerRunsPolicy() // Handle overflow by running in caller thread
         );
+
         log.info("Ping scheduler initialized with {} threads, max queue size: {}",
                 threadPoolSize, maxQueueSize);
     }
@@ -64,23 +65,30 @@ public class PingScheduler {
         log.info("Start new Ping Cycle");
         try {
             Instant now = Instant.now();
-            // Process monitors in batches to avoid memory issues
+
+            // Find monitors ready for ping - use the corrected repository method
             List<Monitor> monitors = monitorRepository.findMonitorsReadyForPingWithLock(now);
+
             if (monitors.isEmpty()) {
                 log.info("No monitors ready for ping");
                 return;
             }
+
             log.info("Processing {} monitors for ping", monitors.size());
+
             // Submit all ping tasks concurrently
             List<CompletableFuture<Void>> futures = monitors.stream()
                     .map(this::submitPingTask)
                     .toList();
+
             // Wait for all tasks to complete
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
                     .orTimeout(30, TimeUnit.SECONDS) // Prevent hanging
                     .join();
+
             log.info("Completed processing {} monitors in ping cycle. Active tasks: {}",
                     monitors.size(), activeTasks.get());
+
         } catch (Exception e) {
             log.error("Error in ping cycle execution", e);
         }
@@ -88,6 +96,7 @@ public class PingScheduler {
 
     private CompletableFuture<Void> submitPingTask(Monitor monitor) {
         activeTasks.incrementAndGet();
+
         return CompletableFuture.runAsync(() -> {
             try {
                 pingExecutorService.executePingForMonitor(monitor);
@@ -102,6 +111,7 @@ public class PingScheduler {
     @PreDestroy
     public void shutdown() {
         log.info("Shutting down ping scheduler...");
+
         if (executorService != null) {
             executorService.shutdown();
             try {
@@ -114,6 +124,7 @@ public class PingScheduler {
                 Thread.currentThread().interrupt();
             }
         }
+
         log.info("Ping scheduler shutdown complete");
     }
 
@@ -121,4 +132,3 @@ public class PingScheduler {
         return activeTasks.get();
     }
 }
-

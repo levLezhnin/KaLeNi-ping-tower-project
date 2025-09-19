@@ -15,7 +15,6 @@ import java.util.Map;
 @Entity
 @Table(name = "ping_records", indexes = {
         @Index(name = "idx_ping_records_monitor_time", columnList = "monitor_id, scheduled_at"),
-        @Index(name = "idx_ping_records_target_time", columnList = "target_id, actual_ping_at"),
         @Index(name = "idx_ping_records_status_time", columnList = "status, scheduled_at")
 })
 @Data
@@ -30,9 +29,6 @@ public class PingRecord {
 
     @Column(name = "monitor_id", nullable = false)
     private Long monitorId;
-
-    @Column(name = "target_id", nullable = false)
-    private Long targetId;
 
     @Column(name = "scheduled_at", nullable = false)
     private Instant scheduledAt;
@@ -64,5 +60,11 @@ public class PingRecord {
     @CreationTimestamp
     @Column(name = "created_at")
     private Instant createdAt;
-}
 
+    // Store request details for debugging
+    @Enumerated(EnumType.STRING)
+    private HttpMethod requestMethod;
+
+    @Column(name = "request_url", length = 2048)
+    private String requestUrl;
+}

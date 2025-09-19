@@ -8,18 +8,14 @@ import team.kaleni.ping.tower.backend.url_service.dto.request.monitor.CreateMoni
 import team.kaleni.ping.tower.backend.url_service.dto.request.monitor.UpdateMonitorRequest;
 import team.kaleni.ping.tower.backend.url_service.dto.response.monitor.MonitorDetailResponse;
 import team.kaleni.ping.tower.backend.url_service.dto.response.monitor.MonitorResponse;
+import team.kaleni.ping.tower.backend.url_service.entity.HttpMethod;
 import team.kaleni.ping.tower.backend.url_service.entity.Monitor;
 import team.kaleni.ping.tower.backend.url_service.entity.MonitorGroup;
-import team.kaleni.ping.tower.backend.url_service.entity.TargetUrl;
 import team.kaleni.ping.tower.backend.url_service.repository.MonitorGroupRepository;
 import team.kaleni.ping.tower.backend.url_service.repository.MonitorRepository;
-import team.kaleni.ping.tower.backend.url_service.repository.TargetUrlRepository;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
 @RequiredArgsConstructor
@@ -27,71 +23,83 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MonitorService {
 
     private final MonitorRepository monitorRepository;
-    private final TargetUrlRepository targetUrlRepository;
     private final MonitorGroupRepository monitorGroupRepository;
     private final PingService pingService;
-    private final URLNormalizer urlNormalizer;
 
     @Transactional
     public MonitorResponse createMonitor(Integer ownerId, CreateMonitorRequest req) {
-        // 0) Normalize URL and test for correctness:
-        String normalized = urlNormalizer.normalize(req.getUrl());
-        if (!testUrl(normalized)) {
-            log.error("The url {} is not valid!", normalized);
-            return MonitorResponse.builder().result(false).url(normalized).build();
-        }
-        // 1) Find or create TargetUrl
-        AtomicBoolean newlyCreatedTarget = new AtomicBoolean(false);
-        TargetUrl target = targetUrlRepository.findByUrl(normalized)
-                .orElseGet(() -> {
-                    TargetUrl t = new TargetUrl();
-                    t.setUrl(normalized);
-                    TargetUrl saved = targetUrlRepository.save(t);
-                    newlyCreatedTarget.set(true);
-                    return saved;
-                });
-        // 2) Unique monitor name per owner enforced by constraint (owner_id, name)
+        log.info("Creating monitor for owner {} with URL: {}", ownerId, req.getUrl());
+
+        // 1) Validate unique monitor name per owner
         Optional<Monitor> existingByName = monitorRepository.findByOwnerIdAndName(ownerId, req.getName());
         if (existingByName.isPresent()) {
             throw new IllegalArgumentException("Monitor with the same name already exists for this owner");
         }
-        // 2.2) Build Monitor entity (enabled by default)
+
+        HttpMethod method = HttpMethod.valueOf(req.getMethod());
+        // 2) Build Monitor entity with all new fields
         Monitor monitor = Monitor.builder()
                 .name(req.getName())
-                .ownerId(ownerId)
-                .target(target)
-                .nextPingAt(null) // let it ping right after new addition to the db
-//                .nextPingAt(Instant.now().plusSeconds(req.getIntervalSeconds()))
                 .description(req.getDescription())
+                .ownerId(ownerId)
+
+                // HTTP Configuration
+                .url(req.getUrl())
+                .method(req.getMethod() != null ? method : HttpMethod.GET)
+                .headers(req.getHeaders())
+                .requestBody(req.getRequestBody())
+                .contentType(req.getContentType())
+
+                // Monitoring Configuration
                 .intervalSeconds(req.getIntervalSeconds())
+                .timeoutMs(req.getTimeoutMs() != null ? req.getTimeoutMs() : 10000)
                 .enabled(true)
+
+                // Initialize for immediate ping
+                .nextPingAt(null) // Will be picked up immediately by scheduler
                 .build();
-        if (req.getTimeoutMs() != null) {
-            monitor.setTimeoutMs(req.getTimeoutMs());
-        }
-        // 3) Optional group (must belong to owner)
-        MonitorGroup group = null;
+
+        // 3) Optional group assignment (must belong to owner)
         if (req.getGroupId() != null) {
-            group = monitorGroupRepository.findById(req.getGroupId())
-                    .filter(g -> Objects.equals(g.getOwnerId(), ownerId))
+            MonitorGroup group = monitorGroupRepository.findByIdAndOwnerId(req.getGroupId(), ownerId)
                     .orElseThrow(() -> new IllegalArgumentException("Group not found or not owned by user"));
+            monitor.setGroup(group);
         }
-        monitor.setGroup(group);
+
+        // 4) Test monitor configuration before saving
+        if (!testMonitorConfiguration(monitor)) {
+            log.error("Monitor configuration test failed for URL: {}", req.getUrl());
+            return MonitorResponse.builder()
+                    .result(false)
+                    .url(req.getUrl())
+                    .build();
+        }
+
+        // 5) Save monitor
         Monitor saved = monitorRepository.save(monitor);
-        // 4) Map to new minimal response
+        log.info("Monitor {} created successfully for owner {}", saved.getId(), ownerId);
+
+        // 6) Return success response
         return MonitorResponse.builder()
                 .result(true)
                 .id(saved.getId())
-                .url(target.getUrl())
-                .newlyCreatedTarget(newlyCreatedTarget.get())
-                .targetId(target.getId())
+                .url(saved.getUrl())
+                .method(saved.getMethod())
                 .groupId(saved.getGroup() != null ? saved.getGroup().getId() : null)
                 .enabled(saved.getEnabled())
                 .build();
     }
 
-    private boolean testUrl(String url) {
-        return pingService.pingURL(url);
+    /**
+     * Test monitor configuration during creation
+     */
+    private boolean testMonitorConfiguration(Monitor monitor) {
+        try {
+            return pingService.pingMonitor(monitor);
+        } catch (Exception e) {
+            log.error("Error testing monitor configuration: {}", e.getMessage());
+            return false;
+        }
     }
 
     public MonitorDetailResponse getMonitorById(Integer ownerId, Long monitorId) {
@@ -108,10 +116,11 @@ public class MonitorService {
                 .toList();
     }
 
-    public List<MonitorDetailResponse> getMonitorsWithinGroup(MonitorGroup group){
+    public List<MonitorDetailResponse> getMonitorsWithinGroup(MonitorGroup group) {
         List<Monitor> monitors = monitorRepository.findByGroup(group);
-        List<MonitorDetailResponse> responses = monitors.stream().map(this::mapToDetailResponse).toList();
-        return responses;
+        return monitors.stream()
+                .map(this::mapToDetailResponse)
+                .toList();
     }
 
     @Transactional
@@ -119,40 +128,73 @@ public class MonitorService {
         // Find existing monitor and verify ownership
         Monitor existingMonitor = monitorRepository.findByIdAndOwnerId(monitorId, ownerId)
                 .orElseThrow(() -> new IllegalArgumentException("Monitor not found or not owned by user"));
-        if (req.getGroupId() != null) {
-            MonitorGroup group = monitorGroupRepository.findByIdAndOwnerId(req.getGroupId(), ownerId)
-                    .orElseThrow(() -> new IllegalArgumentException("Group not found or not owned by user"));
-            existingMonitor.setGroup(group);
-        }
+
+        boolean needsPingTest = false;
+        // Update basic fields
         if (req.getName() != null) {
             existingMonitor.setName(req.getName());
         }
         if (req.getDescription() != null) {
             existingMonitor.setDescription(req.getDescription());
         }
-        existingMonitor.setIntervalSeconds(req.getIntervalSeconds());
+        // Update HTTP configuration (these require ping test)
+        if (req.getUrl() != null) {
+            existingMonitor.setUrl(req.getUrl());
+            needsPingTest = true;
+        }
+        if (req.getMethod() != null) {
+            existingMonitor.setMethod(req.getMethod());
+            needsPingTest = true;
+        }
+        if (req.getHeaders() != null) {
+            existingMonitor.setHeaders(req.getHeaders());
+            needsPingTest = true;
+        }
+        if (req.getRequestBody() != null) {
+            existingMonitor.setRequestBody(req.getRequestBody());
+            needsPingTest = true;
+        }
+        if (req.getContentType() != null) {
+            existingMonitor.setContentType(req.getContentType());
+            needsPingTest = true;
+        }
+        // Update monitoring configuration
+        if (req.getIntervalSeconds() != null) {
+            existingMonitor.setIntervalSeconds(req.getIntervalSeconds());
+        }
         if (req.getTimeoutMs() != null) {
             existingMonitor.setTimeoutMs(req.getTimeoutMs());
+            needsPingTest = true; // Timeout change might affect connectivity
         }
         if (req.getEnabled() != null) {
             existingMonitor.setEnabled(req.getEnabled());
         }
+        // Update group assignment
+        if (req.getGroupId() != null) {
+            MonitorGroup group = monitorGroupRepository.findByIdAndOwnerId(req.getGroupId(), ownerId)
+                    .orElseThrow(() -> new IllegalArgumentException("Group not found or not owned by user"));
+            existingMonitor.setGroup(group);
+        }
+        // Test configuration if HTTP settings changed
+        if (needsPingTest && existingMonitor.getEnabled()) {
+            if (!testMonitorConfiguration(existingMonitor)) {
+                log.warn("Monitor configuration test failed after update for monitor {}", monitorId);
+                // Don't fail the update, just log warning
+            }
+        }
         Monitor savedMonitor = monitorRepository.save(existingMonitor);
+        log.info("Monitor {} updated successfully for owner {}", monitorId, ownerId);
         return mapToDetailResponse(savedMonitor);
     }
 
+
     @Transactional
     public void deleteMonitor(Integer ownerId, Long monitorId) {
-        //Find monitor and verify ownership
+        // Find monitor and verify ownership
         Monitor monitor = monitorRepository.findByIdAndOwnerId(monitorId, ownerId)
                 .orElseThrow(() -> new IllegalArgumentException("Monitor not found or not owned by user"));
+
         monitorRepository.delete(monitor);
-        TargetUrl target = monitor.getTarget();
-        long remainingMonitors = monitorRepository.countByTarget(target);
-        if (remainingMonitors == 0) {
-            log.info("Cleaning up orphaned TargetUrl: {}", target.getUrl());
-            targetUrlRepository.delete(target);
-        }
         log.info("Monitor {} deleted successfully for owner {}", monitorId, ownerId);
     }
 
@@ -160,30 +202,45 @@ public class MonitorService {
     public void setMonitorEnabled(Integer ownerId, Long monitorId, boolean enabled) {
         Monitor monitor = monitorRepository.findByIdAndOwnerId(monitorId, ownerId)
                 .orElseThrow(() -> new IllegalArgumentException("Monitor not found or not owned by user"));
+
         monitor.setEnabled(enabled);
         monitorRepository.save(monitor);
         log.info("Monitor {} {} for owner {}", monitorId, enabled ? "enabled" : "disabled", ownerId);
     }
 
-
     private MonitorDetailResponse mapToDetailResponse(Monitor monitor) {
-        TargetUrl target = monitor.getTarget();
         MonitorGroup group = monitor.getGroup();
+
         return MonitorDetailResponse.builder()
                 .id(monitor.getId())
                 .name(monitor.getName())
                 .description(monitor.getDescription())
-                .url(target.getUrl())
-                .targetId(target.getId())
+
+                // HTTP Configuration
+                .url(monitor.getUrl())
+                .method(monitor.getMethod())
+                .headers(monitor.getHeaders())
+                .requestBody(monitor.getRequestBody())
+                .contentType(monitor.getContentType())
+
+                // Monitoring Configuration
                 .intervalSeconds(monitor.getIntervalSeconds())
                 .timeoutMs(monitor.getTimeoutMs())
                 .enabled(monitor.getEnabled())
-                .currentStatus(target.getLastStatus())
-                .lastCheckedAt(target.getLastCheckedAt())
+
+                // Current Status
+                .currentStatus(monitor.getLastStatus())
+                .lastCheckedAt(monitor.getLastCheckedAt())
+                .lastResponseTimeMs(monitor.getLastResponseTimeMs())
+                .lastResponseCode(monitor.getLastResponseCode())
+                .lastErrorMessage(monitor.getLastErrorMessage())
+
+                // Relationships
                 .groupId(group != null ? group.getId() : null)
+
+                // Metadata
                 .createdAt(monitor.getCreatedAt())
                 .updatedAt(monitor.getUpdatedAt())
                 .build();
     }
 }
-
