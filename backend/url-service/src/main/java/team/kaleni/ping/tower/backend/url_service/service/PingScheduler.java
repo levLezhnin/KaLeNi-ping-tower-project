@@ -19,6 +19,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -74,7 +75,8 @@ public class PingScheduler {
                 return;
             }
 
-            log.info("Processing {} monitors for ping", monitors.size());
+            log.info("Processing {} monitors for ping: [{}]", monitors.size(),
+                    monitors.stream().map(a -> a.getId().toString()).collect(Collectors.joining(",")));
 
             // Submit all ping tasks concurrently
             List<CompletableFuture<Void>> futures = monitors.stream()

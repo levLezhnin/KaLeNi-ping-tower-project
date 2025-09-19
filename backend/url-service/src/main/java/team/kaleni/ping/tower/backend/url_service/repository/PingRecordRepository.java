@@ -18,10 +18,6 @@ public interface PingRecordRepository extends JpaRepository<PingRecord, Long> {
     @Query("SELECT p FROM PingRecord p WHERE p.monitorId = :monitorId ORDER BY p.scheduledAt DESC")
     List<PingRecord> findByMonitorIdOrderByScheduledAtDesc(@Param("monitorId") Long monitorId, Pageable pageable);
 
-    // Find recent ping records for a target
-    @Query("SELECT p FROM PingRecord p WHERE p.targetId = :targetId ORDER BY p.actualPingAt DESC")
-    List<PingRecord> findByTargetIdOrderByActualPingAtDesc(@Param("targetId") Long targetId, Pageable pageable);
-
     // Count pings by status for statistics
     @Query("SELECT COUNT(p) FROM PingRecord p WHERE p.monitorId = :monitorId AND p.status = :status AND p" +
             ".scheduledAt" + " >= :since")
