@@ -1,41 +1,5 @@
 import api from "./apiClient";
-
-export type PingStatus = "UP" | "DOWN" | "UNKNOWN" | "PAUSED";
-
-export interface MonitorDetailResponse {
-    id: number;
-    name: string;
-    description?: string;
-    url: string;
-    targetId: number;
-    intervalSeconds: number;
-    timeoutMs?: number;
-    enabled?: boolean;
-    currentStatus?: PingStatus;
-    lastCheckedAt?: string;
-    groupId?: number;
-    createdAt?: string;
-    updatedAt?: string;
-}
-
-export interface CreateMonitorRequest {
-    name: string;
-    description?: string;
-    url: string;
-    intervalSeconds: number;
-    timeoutMs?: number;
-    groupId?: number;
-}
-
-export interface MonitorCreateResponse {
-    result: boolean;
-    id?: number;
-    url?: string;
-    newlyCreatedTarget?: boolean;
-    targetId?: number;
-    groupId?: number;
-    enabled?: boolean;
-}
+import type { CreateMonitorRequest, MonitorCreateResponse, MonitorDetailResponse } from "./monitorTypes";
 
 export const monitorService = {
     async list(): Promise<MonitorDetailResponse[]> {
@@ -45,29 +9,55 @@ export const monitorService = {
 
     async get(id: number): Promise<MonitorDetailResponse> {
         const { data } = await api.get<MonitorDetailResponse>(`/api/monitors/${id}`);
+        console.log(data);
         return data;
     },
 
     async create(payload: CreateMonitorRequest): Promise<MonitorCreateResponse> {
-        const { data } = await api.post<MonitorCreateResponse>(`/api/monitors/register`, payload);
-        return data;
+        try {
+            const { data } = await api.post<MonitorCreateResponse>('/api/monitors/register', payload);
+            return data;
+        } catch (e: any) {
+            const msg = e?.response?.data?.message || e?.response?.data?.error || e?.message || "Create failed";
+            throw new Error(msg);
+        }
     },
 
     async update(id: number, payload: Partial<CreateMonitorRequest>): Promise<MonitorDetailResponse> {
-        const { data } = await api.put<MonitorDetailResponse>(`/api/monitors/${id}`, payload);
-        return data;
+        try {
+            const { data } = await api.put<MonitorDetailResponse>(`/api/monitors/${id}`, payload);
+            return data;
+        } catch (e: any) {
+            const msg = e?.response?.data?.message || e?.response?.data?.error || e?.message || "Update failed";
+            throw new Error(msg);
+        }
     },
 
     async remove(id: number): Promise<void> {
-        await api.delete(`/api/monitors/${id}`);
+        try {
+            await api.delete(`/api/monitors/${id}`);
+        } catch (e: any) {
+            const msg = e?.response?.data?.message || e?.response?.data?.error || e?.message || "Delete failed";
+            throw new Error(msg);
+        }
     },
 
     async enable(id: number): Promise<void> {
-        await api.post(`/api/monitors/${id}/enable`);
+        try {
+            await api.post(`/api/monitors/${id}/enable`);
+        } catch (e: any) {
+            const msg = e?.response?.data?.message || e?.response?.data?.error || e?.message || "Enable failed";
+            throw new Error(msg);
+        }
     },
 
     async disable(id: number): Promise<void> {
-        await api.post(`/api/monitors/${id}/disable`);
+        try {
+            await api.post(`/api/monitors/${id}/disable`);
+        } catch (e: any) {
+            const msg = e?.response?.data?.message || e?.response?.data?.error || e?.message || "Disable failed";
+            throw new Error(msg);
+        }
     },
 };
 

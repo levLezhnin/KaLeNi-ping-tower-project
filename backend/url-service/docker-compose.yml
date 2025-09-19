@@ -13,13 +13,13 @@ services:
     ports:
       - "${POSTGRES_PORT}:5432"
     networks:
-      - url_service_network
+      - shared_network
 
   url_service_app:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: url_service_app
+    container_name: url-service-app
     env_file:
       - .env
     environment:
@@ -31,10 +31,12 @@ services:
     depends_on:
       - db
     networks:
-      - url_service_network
+      - shared_network
 
 volumes:
   postgres_data:
 
 networks:
-  url_service_network:
+  shared_network:
+    external: false
+    name: ping_app_network
