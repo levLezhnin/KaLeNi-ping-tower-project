@@ -1,24 +1,26 @@
 import axios from "axios";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-const defaultOwnerId = import.meta.env.VITE_OWNER_ID || "42";
+const BACKEND_URL = "/";
+const DEFAULT_OWNER_ID = "42";
 
 export const api = axios.create({
-    baseURL,
+    baseURL: BACKEND_URL,
+    headers: {
+        "Content-Type": "application/json",
+    },
 });
 
 api.interceptors.request.use((config) => {
-    // Temporary owner header until auth is implemented
-    const ownerId = localStorage.getItem("monitorpro_owner_id") || String(defaultOwnerId);
+    const ownerId = DEFAULT_OWNER_ID;
     config.headers = config.headers || {};
-    (config.headers as Record<string, string>)["X-Owner-Id"] = ownerId;
+    (config.headers as Record<string, any>)["X-Owner-Id"] = parseInt(ownerId, 10);
+
     const token = localStorage.getItem("monitorpro_token");
     if (token) {
         (config.headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
     }
+
     return config;
 });
 
 export default api;
-
-

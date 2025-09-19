@@ -25,8 +25,8 @@ export const authService = {
     async register(payload: RegisterPayload): Promise<void> {
         // No backend auth endpoints provided. Emulate success.
         localStorage.setItem(TOKEN_KEY, "demo-token");
-        // Derive an owner id deterministically from email (fallback to env default)
-        const owner = this.deriveOwnerId(payload.email);
+        // Generate unique random owner ID for each user
+        const owner = this.generateUniqueOwnerId();
         localStorage.setItem(OWNER_KEY, owner);
         localStorage.setItem(EMAIL_KEY, payload.email);
     },
@@ -34,7 +34,8 @@ export const authService = {
     async login(payload: LoginPayload): Promise<void> {
         // Emulate login; in future, call backend and set token/owner id from response
         localStorage.setItem(TOKEN_KEY, "demo-token");
-        const owner = this.deriveOwnerId(payload.email);
+        // Generate unique random owner ID for each user
+        const owner = this.generateUniqueOwnerId();
         localStorage.setItem(OWNER_KEY, owner);
         localStorage.setItem(EMAIL_KEY, payload.email);
     },
@@ -46,14 +47,11 @@ export const authService = {
         localStorage.removeItem(EMAIL_KEY);
     },
 
-    deriveOwnerId(email: string): string {
-        // Very simple stable hash to numeric string in [1..1e6]
-        let h = 0;
-        for (let i = 0; i < email.length; i++) {
-            h = (h * 31 + email.charCodeAt(i)) >>> 0;
-        }
-        const id = (h % 1000000) + 1;
-        return String(id);
+    generateUniqueOwnerId(): string {
+        // Generate unique random ID using timestamp + random number
+        const timestamp = Date.now();
+        const random = Math.floor(Math.random() * 10000);
+        return String(timestamp + random);
     },
 };
 

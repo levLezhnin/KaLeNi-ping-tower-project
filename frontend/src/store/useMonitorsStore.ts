@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import monitorService, { type MonitorDetailResponse, type CreateMonitorRequest } from "../services/monitorService";
+import { type MonitorDetailResponse, type CreateMonitorRequest } from "../services/monitorTypes";
+import { monitorService } from "../services/monitorService";
 
 type State = {
     monitors: MonitorDetailResponse[];
@@ -24,7 +25,12 @@ export const useMonitorsStore = create<State>((set, get) => ({
         set({ loading: true, error: null });
         try {
             const data = await monitorService.list();
-            set({ monitors: data, loading: false });
+            const sanitized = Array.isArray(data)
+                ? data.filter((m) =>
+                    m && typeof m.id === "number" && ((m.name && m.name.trim().length > 0) || (m.url && m.url.trim().length > 0))
+                )
+                : [];
+            set({ monitors: sanitized, loading: false });
         } catch (e: any) {
             set({ loading: false, error: e?.message || "Не удалось загрузить мониторы" });
         }
@@ -59,7 +65,8 @@ export const useMonitorsStore = create<State>((set, get) => ({
             }
             return undefined;
         } catch (e: any) {
-            set({ error: e?.message || "Не удалось создать монитор" });
+            const msg = e?.message || "Не удалось создать монитор";
+            set({ error: msg });
             return undefined;
         }
     },
@@ -116,5 +123,3 @@ export const useMonitorsStore = create<State>((set, get) => ({
 }));
 
 export default useMonitorsStore;
-
-

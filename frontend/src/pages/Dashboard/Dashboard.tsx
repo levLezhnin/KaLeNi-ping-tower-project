@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMonitorsStore } from "../../store/useMonitorsStore";
 import { useGroupsStore } from "../../store/useGroupsStore";
-import type { MonitorDetailResponse } from "../../services/monitorService";
+import type { CreateMonitorRequest, MonitorDetailResponse } from "../../services/monitorTypes";
 
 function StatusDot({ status }: { status: MonitorDetailResponse["currentStatus"] }) {
   const cls =
@@ -47,13 +47,30 @@ export default function Dashboard() {
     e.preventDefault();
     if (!name || !url) return;
     setSubmitting(true);
-    const res = await create({ name, url, intervalSeconds: Math.max(30, interval) });
+
+    // Собираем payload
+    const payload: CreateMonitorRequest = {
+      name,
+      description: "",
+      url,
+      intervalSeconds: Math.max(30, interval),
+      timeoutMs: 1000,
+    };
+
+    // Добавляем groupId только если он задан и не 0
+    // if (groupId && groupId > 0) {
+    //   payload.groupId = groupId;
+    // }
+
+    const res = await create(payload);
+
     if (!res) {
       setAddError(error || "Не удалось создать монитор");
     } else {
       setAddError(null);
       setName(""); setUrl(""); setInterval(60);
     }
+
     setSubmitting(false);
   };
 
@@ -144,9 +161,9 @@ export default function Dashboard() {
                       className="px-2 py-1 border border-[hsl(var(--border))] rounded bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
                     >
                       <option value=''>Без группы</option>
-                      {groups.map(g => (
+                      {/* {Array.isArray(groups) && groups.map(g => (
                         <option key={g.id} value={g.id}>{g.name}</option>
-                      ))}
+                      ))} */}
                     </select>
                     {m.enabled ? (
                       <button onClick={() => disable(m.id)} className="px-2 py-1 border border-[hsl(var(--border))] rounded">Отключить</button>
