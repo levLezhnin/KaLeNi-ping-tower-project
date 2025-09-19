@@ -9,7 +9,7 @@ export default defineConfig({
   open: false,
   proxy: {
     "/api": {
-      target: "http://url-service_url_service_network:8080", 
+      target: "http://url-service-app:8080", 
       changeOrigin: true,
       secure: false,
     },

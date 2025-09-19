@@ -6,6 +6,10 @@ services:
     container_name: frontend
     ports:
       - "5173:5173"
+    networks:
+      - shared_network
 
 networks:
-  url_service_network:
+  shared_network:
+    external: true
+    name: ping_app_network
