@@ -38,5 +38,5 @@ volumes:
 
 networks:
   shared-network:
-    external: false
+    external: true
     name: ping_app_network
