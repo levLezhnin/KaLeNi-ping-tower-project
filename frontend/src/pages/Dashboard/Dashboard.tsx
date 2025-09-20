@@ -10,7 +10,9 @@ function StatusDot({ status }: { status: MonitorDetailResponse["currentStatus"] 
       ? "bg-green-400"
       : status === "DOWN"
         ? "bg-red-500"
-        : "bg-[hsl(var(--muted-foreground))]";
+        : status === "PAUSED"
+          ? "bg-yellow-400"
+          : "bg-gray-400"; // UNKNOWN or undefined
   return <span className={`inline-block w-3 h-3 rounded-full ${cls}`}></span>;
 }
 
@@ -42,26 +44,45 @@ export default function Dashboard() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-semibold">Мониторинг — URL-адреса</h2>
         <div className="flex items-center gap-3">
-          <input
-            placeholder="Поиск..."
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="px-3 py-2 border border-[hsl(var(--border))] rounded bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
-          />
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
-            className="px-3 py-2 border border-[hsl(var(--border))] rounded bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
-          >
-            <option value="all">Все</option>
-            <option value="up">Только доступные</option>
-            <option value="down">Только недоступные</option>
-          </select>
+          <div className="relative">
+            <input
+              placeholder="Поиск по названию или URL..."
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="px-4 py-2 pl-10 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-500"
+            />
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+          <div className="relative">
+            <select
+              value={filter}
+              onChange={(e) => setFilter(e.target.value as any)}
+              className="appearance-none px-4 py-2 pr-8 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-500 cursor-pointer"
+            >
+              <option value="all">Все мониторы</option>
+              <option value="up">Только доступные</option>
+              <option value="down">Только недоступные</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
           <button
-            className="ml-4 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] px-4 py-2 rounded shadow hover:bg-[hsl(var(--primary-dark))]"
+            className="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
             onClick={() => setAddModalOpen(true)}
           >
-            Добавить сайт
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Добавить сайт
+            </div>
           </button>
         </div>
       </div>
@@ -80,65 +101,175 @@ export default function Dashboard() {
         ) : (
           <div className="space-y-2">
             {visible.length === 0 && <div className="text-[hsl(var(--muted-foreground))]">Нет мониторов</div>}
-            {visible.map((m) => (
-              <div key={m.id} className="flex flex-col md:flex-row md:items-center justify-between p-3 border border-[hsl(var(--border))] rounded gap-2 bg-white dark:bg-[hsl(var(--card))]">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start gap-3">
-                    <div className="pt-1"><StatusDot status={m.currentStatus} /></div>
-                    <div className="truncate">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Link to={`/url/${m.id}`} className="font-medium truncate text-lg leading-tight text-gray-900 dark:text-white">{m.name}</Link>
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+              {visible.map((m) => (
+                <div key={m.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden flex flex-col h-full">
+                  {/* Header with status and title */}
+                  <div className="p-4 border-b border-gray-100 dark:border-gray-700">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="flex-shrink-0">
+                          <StatusDot status={m.currentStatus} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <Link
+                            to={`/url/${m.id}`}
+                            className="font-semibold text-lg text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors truncate block"
+                          >
+                            {m.name}
+                          </Link>
+                          {m.description && (
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                              {m.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 ml-3">
                         <Link
                           to={`/url/${m.id}`}
-                          className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200 transition"
-                          style={{ whiteSpace: 'nowrap' }}
+                          className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 transition-colors"
                         >
                           Статистика
                         </Link>
-                        {m.method && <span className="text-xs px-2 py-0.5 rounded bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]">{m.method}</span>}
-                        {m.contentType && <span className="text-xs px-2 py-0.5 rounded bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]">{m.contentType}</span>}
-                      </div>
-                      {m.description && <div className="text-xs text-[hsl(var(--muted-foreground))] truncate mb-1">{m.description}</div>}
-                      <div className="text-sm text-blue-700 dark:text-blue-400 truncate mb-1">{m.url}</div>
-                      <div className="text-xs text-[hsl(var(--muted-foreground))] flex gap-2 flex-wrap mb-1">
-                        <span>Интервал: {m.intervalSeconds}s</span>
-                        <span>Таймаут: {m.timeoutMs}мс</span>
-                        {m.lastCheckedAt && <span>Проверен: {new Date(m.lastCheckedAt).toLocaleString()}</span>}
-                      </div>
-                      <div className="flex flex-wrap gap-2 mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-                        {m.headers && Object.keys(m.headers).length > 0 && (
-                          <span>Headers: {Object.entries(m.headers).map(([k, v]) => `${k}: ${v}`).join(", ")}</span>
-                        )}
-                        {m.requestBody && m.method !== "GET" && (
-                          <span>Body: {typeof m.requestBody === "object" ? JSON.stringify(m.requestBody) : String(m.requestBody)}</span>
-                        )}
-                      </div>
-                      <div className="flex flex-wrap gap-4 mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-                        {typeof m.lastResponseTimeMs === "number" && <span>Время ответа: {m.lastResponseTimeMs}мс</span>}
-                        {typeof m.lastResponseCode === "number" && <span>Код: {m.lastResponseCode}</span>}
-                        {m.lastErrorMessage && <span className="text-red-500">Ошибка: {m.lastErrorMessage}</span>}
                       </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3 text-sm mt-2 md:mt-0 md:ml-4">
-                  <label className="flex items-center cursor-pointer select-none gap-2">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        checked={!!m.enabled}
-                        onChange={() => m.enabled ? disable(m.id) : enable(m.id)}
-                        className="peer sr-only"
-                      />
-                      <div className="w-16 h-8 rounded-full transition bg-gray-300 peer-checked:bg-green-500 flex items-center px-1 box-border">
-                        <span className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow transition-all duration-200 ${m.enabled ? 'translate-x-8' : 'translate-x-0'}`}></span>
+
+                  {/* Main content */}
+                  <div className="p-4 space-y-3 flex-1">
+                    {/* URL */}
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0"></div>
+                      <a
+                        href={m.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:underline truncate flex-1"
+                      >
+                        {m.url}
+                      </a>
+                    </div>
+
+                    {/* Method and Content Type */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {m.method && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                          {m.method}
+                        </span>
+                      )}
+                      {m.contentType && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                          {m.contentType}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Status info */}
+                    <div className="grid grid-cols-2 gap-3 text-xs">
+                      <div className="space-y-1">
+                        <div className="text-gray-500 dark:text-gray-400">Интервал</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{m.intervalSeconds}s</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-gray-500 dark:text-gray-400">Таймаут</div>
+                        <div className="font-medium text-gray-900 dark:text-gray-100">{m.timeoutMs}мс</div>
                       </div>
                     </div>
-                  </label>
-                  <button onClick={() => remove(m.id)} className="px-2 py-1 border border-[hsl(var(--border))] rounded text-[hsl(var(--destructive))]">Удалить</button>
+
+                    {/* Last check info */}
+                    {m.lastCheckedAt && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Последняя проверка: {new Date(m.lastCheckedAt).toLocaleString()}
+                      </div>
+                    )}
+
+                    {/* Response info */}
+                    <div className="flex items-center justify-between text-xs">
+                      {typeof m.lastResponseTimeMs === "number" && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+                          <span className="text-gray-600 dark:text-gray-400">{m.lastResponseTimeMs}мс</span>
+                        </div>
+                      )}
+                      {typeof m.lastResponseCode === "number" && (
+                        <div className={`px-2 py-1 rounded text-xs font-medium ${m.lastResponseCode >= 200 && m.lastResponseCode < 300
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                          : m.lastResponseCode >= 400
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                          }`}>
+                          {m.lastResponseCode}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Headers info */}
+                    {m.headers && Object.keys(m.headers).length > 0 && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <div className="font-medium mb-1">Заголовки:</div>
+                        <div className="space-y-1">
+                          {Object.entries(m.headers).slice(0, 2).map(([k, v]) => (
+                            <div key={k} className="truncate">
+                              <span className="font-medium">{k}:</span> {v}
+                            </div>
+                          ))}
+                          {Object.keys(m.headers).length > 2 && (
+                            <div className="text-gray-400">+{Object.keys(m.headers).length - 2} еще</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Request body info */}
+                    {m.requestBody && m.method !== "GET" && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        <div className="font-medium mb-1">Тело запроса:</div>
+                        <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded text-xs font-mono truncate">
+                          {typeof m.requestBody === "object" ? JSON.stringify(m.requestBody) : String(m.requestBody)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Error message */}
+                    {m.lastErrorMessage && (
+                      <div className="p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-xs text-red-700 dark:text-red-400">
+                        <div className="font-medium mb-1">Ошибка:</div>
+                        {m.lastErrorMessage}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer with controls */}
+                  <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 mt-auto">
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center cursor-pointer select-none gap-2">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={!!m.enabled}
+                            onChange={() => m.enabled ? disable(m.id) : enable(m.id)}
+                            className="peer sr-only"
+                          />
+                          <div className="w-12 h-6 rounded-full transition bg-gray-300 peer-checked:bg-green-500 flex items-center px-1 box-border">
+                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-all duration-200 ${m.enabled ? 'translate-x-6' : 'translate-x-0'}`}></span>
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                          {m.enabled ? 'Включен' : 'Выключен'}
+                        </span>
+                      </label>
+                      <button
+                        onClick={() => remove(m.id)}
+                        className="px-3 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>
