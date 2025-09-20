@@ -69,6 +69,29 @@ services:
     networks:
       - ping_app_network
     restart: unless-stopped
+  
+  # НОВЫЙ Ping Service
+  ping_service:
+    build:
+      context: ./backend/ping-service
+      dockerfile: Dockerfile
+    container_name: ping-service
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+      # Redis configuration
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASE: ${REDIS_DATABASE}
+      # Ping service configuration
+      PING_SCHEDULER_INTERVAL: ${PING_SCHEDULER_INTERVAL:-5000}
+      PING_THREAD_POOL_SIZE: ${PING_THREAD_POOL_SIZE:-10}
+      PING_BATCH_SIZE: ${PING_BATCH_SIZE:-50}
+    depends_on:
+      - redis
+    networks:
+      - ping_app_network
+    restart: unless-stopped
 
   # User Service приложение
   user_service:

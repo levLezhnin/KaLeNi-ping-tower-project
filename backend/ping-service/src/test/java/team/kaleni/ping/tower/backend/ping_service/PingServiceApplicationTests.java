@@ -1,4 +1,4 @@
-package team.kaleni.ping.tower.backen.ping_service;
+package team.kaleni.ping.tower.backend.ping_service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
