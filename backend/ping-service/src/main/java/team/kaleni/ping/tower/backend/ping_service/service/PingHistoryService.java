@@ -1,113 +1,87 @@
 package team.kaleni.ping.tower.backend.ping_service.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import team.kaleni.ping.tower.backend.ping_service.dto.PingResultDto;
+import team.kaleni.ping.tower.backend.ping_service.entity.PingResult;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class PingHistoryService {
 
-    @Value("${ping.clickhouse.batch.size:1000}")
+    private final ClickHouseService clickHouseService;
+    private final ConcurrentLinkedQueue<PingResult> pendingResults = new ConcurrentLinkedQueue<>();
+
+    @Value("${ping.batch.size:50}")
     private int batchSize;
 
-    @Value("${ping.clickhouse.batch.timeout:60000}")
-    private long batchTimeoutMs;
-
-    private final ConcurrentLinkedQueue<PingResultDto> pendingResults = new ConcurrentLinkedQueue<>();
-    private final AtomicLong totalBatched = new AtomicLong(0);
-    private volatile long lastBatchTime = System.currentTimeMillis();
-
     /**
-     * 🔥 Добавить результат пинга в батч
+     * Добавить результат пинга в батч для сохранения
      */
-    public void addToBatch(PingResultDto pingResult) {
-        pendingResults.offer(pingResult);
-
-        // Если достигли размера батча, обрабатываем немедленно
-        if (pendingResults.size() >= batchSize) {
-            processBatch();
-        }
-    }
-
-    /**
-     * ⏰ Периодическая обработка батчей (каждые 30 секунд)
-     */
-    @Scheduled(fixedRate = 30000)
-    public void processScheduledBatch() {
-        long currentTime = System.currentTimeMillis();
-
-        // Обрабатываем если есть данные и прошел timeout
-        if (!pendingResults.isEmpty() && (currentTime - lastBatchTime) > batchTimeoutMs) {
-            processBatch();
-        }
-    }
-
-    /**
-     * 📊 Обработать накопленный батч
-     */
-    private synchronized void processBatch() {
-        if (pendingResults.isEmpty()) {
-            return;
-        }
-
-        List<PingResultDto> batch = new ArrayList<>();
-        PingResultDto result;
-
-        // Извлекаем все накопленные результаты
-        while ((result = pendingResults.poll()) != null) {
-            batch.add(result);
-        }
-
-        if (batch.isEmpty()) {
-            return;
-        }
-
+    @Async
+    public void addToBatch(PingResultDto pingResultDto) {
         try {
-            // TODO: Здесь будет отправка в ClickHouse
-            // clickHouseService.saveBatch(batch);
+            PingResult pingResult = PingResult.fromPingResultDto(pingResultDto);
+            pendingResults.offer(pingResult);
 
-            // Пока просто логируем
-            log.info("Processed batch of {} ping results (total batched: {})",
-                    batch.size(), totalBatched.addAndGet(batch.size()));
-
-            // Логируем sample результатов для отладки
-            if (log.isDebugEnabled() && !batch.isEmpty()) {
-                PingResultDto sample = batch.get(0);
-                log.debug("Sample ping result: monitor={}, status={}, responseTime={}ms, url={}",
-                        sample.getMonitorId(), sample.getStatus(),
-                        sample.getResponseTimeMs(), sample.getUrl());
-            }
+            log.debug("Added ping result to batch for monitor {}, queue size: {}",
+                    pingResult.getMonitorId(), pendingResults.size());
 
         } catch (Exception e) {
-            log.error("Error processing ping results batch: {}", e.getMessage());
-
-            // В случае ошибки возвращаем обратно в очередь
-            pendingResults.addAll(batch);
+            log.error("Error adding ping result to batch for monitor {}: {}",
+                    pingResultDto.getMonitorId(), e.getMessage(), e);
         }
-
-        lastBatchTime = System.currentTimeMillis();
     }
 
     /**
-     * 📈 Получить размер текущего батча
+     * Получить размер батча (вызывается из scheduler для статистики)
      */
     public int getBatchSize() {
         return pendingResults.size();
     }
 
     /**
-     * 📊 Получить статистику
+     * Обработать накопленные результаты пингов (вызывается по расписанию)
      */
-    public long getTotalBatched() {
-        return totalBatched.get();
-    }
-}
+    @Scheduled(fixedRateString = "${ping.batch.process.interval:10000}")
+    public void processPendingResults() {
+        if (pendingResults.isEmpty()) {
+            return;
+        }
 
+        List<PingResult> batch = new ArrayList<>();
+
+        for (int i = 0; i < batchSize && !pendingResults.isEmpty(); i++) {
+            PingResult result = pendingResults.poll();
+            if (result != null) {
+                batch.add(result);
+            }
+        }
+
+        if (!batch.isEmpty()) {
+            try {
+                clickHouseService.savePingResultsBatchOptimized(batch);
+
+                log.info("Processed batch of {} ping results (remaining: {})",
+                        batch.size(), pendingResults.size());
+                PingResult sample = batch.get(0);
+                log.debug("Sample ping result: monitor={}, status={}, responseTime={} ms, url={}",
+                        sample.getMonitorId(), sample.getStatus(), sample.getResponseTimeMs(), sample.getUrl());
+
+            } catch (Exception e) {
+                log.error("Error processing ping results batch: {}", e.getMessage(), e);
+                batch.forEach(pendingResults::offer);
+            }
+        }
+    }
+
+}
