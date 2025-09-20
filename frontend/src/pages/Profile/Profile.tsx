@@ -62,46 +62,169 @@ export default function Profile() {
     };
 
     return (
-        <div className="max-w-md mx-auto my-16 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-8 rounded-xl shadow">
-            <h3 className="text-2xl font-semibold mb-4">Личный кабинет</h3>
-            <div className="mb-4 text-sm text-gray-500">Email: <span className="font-mono">{email}</span></div>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                {error && <div className="text-red-600 text-sm">{error}</div>}
-                {success && <div className="text-green-600 text-sm">{success}</div>}
-                <label className="block">
-                    <span className="text-sm text-[hsl(var(--muted-foreground))]">Имя пользователя</span>
-                    <input
-                        className="mt-1 block w-full border border-[hsl(var(--border))] rounded px-3 py-2 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
-                        value={username}
-                        onChange={e => setUsername(e.target.value)}
-                    />
-                </label>
-                <label className="block">
-                    <span className="text-sm text-[hsl(var(--muted-foreground))]">Новый пароль (необязательно)</span>
-                    <input
-                        type="password"
-                        className="mt-1 block w-full border border-[hsl(var(--border))] rounded px-3 py-2 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
-                        value={password}
-                        onChange={e => setPassword(e.target.value)}
-                    />
-                </label>
-                <label className="block">
-                    <span className="text-sm text-[hsl(var(--muted-foreground))]">Подтвердите новый пароль</span>
-                    <input
-                        type="password"
-                        className="mt-1 block w-full border border-[hsl(var(--border))] rounded px-3 py-2 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
-                        value={password2}
-                        onChange={e => setPassword2(e.target.value)}
-                    />
-                </label>
-                <button
-                    type="submit"
-                    className="w-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] px-4 py-2 rounded mt-2 disabled:opacity-60"
-                    disabled={loading}
-                >
-                    {loading ? "Сохраняем..." : "Сохранить изменения"}
-                </button>
-            </form>
+        <div className="max-w-2xl mx-auto p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8">
+                    <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold text-white">Личный кабинет</h1>
+                            <p className="text-blue-100 mt-1">Управление профилем и настройками</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6">
+                    {/* User Info */}
+                    <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                        <div className="flex items-center gap-3">
+                            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            <div>
+                                <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Email</span>
+                                <div className="text-gray-900 dark:text-white font-mono">{email}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="space-y-6">
+                        {error && (
+                            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span className="text-red-700 dark:text-red-400 text-sm font-medium">{error}</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {success && (
+                            <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span className="text-green-700 dark:text-green-400 text-sm font-medium">{success}</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Username */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Имя пользователя *
+                            </label>
+                            <input
+                                className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                placeholder="Введите имя пользователя"
+                                value={username}
+                                onChange={e => setUsername(e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        {/* Password Section */}
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-2">
+                                <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                <h3 className="text-lg font-medium text-gray-900 dark:text-white">Смена пароля</h3>
+                            </div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Оставьте поля пустыми, если не хотите менять пароль</p>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Новый пароль
+                                </label>
+                                <input
+                                    type="password"
+                                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                    placeholder="Введите новый пароль"
+                                    value={password}
+                                    onChange={e => setPassword(e.target.value)}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    Подтвердите новый пароль
+                                </label>
+                                <input
+                                    type="password"
+                                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                                    placeholder="Повторите новый пароль"
+                                    value={password2}
+                                    onChange={e => setPassword2(e.target.value)}
+                                />
+                            </div>
+
+                            {/* Password Requirements */}
+                            {password && (
+                                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                                    <h4 className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">Требования к паролю:</h4>
+                                    <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-1">
+                                        <li className={`flex items-center gap-2 ${password.length > 8 ? 'text-green-600' : ''}`}>
+                                            <svg className={`w-3 h-3 ${password.length > 8 ? 'text-green-500' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
+                                            Длина более 8 символов
+                                        </li>
+                                        <li className={`flex items-center gap-2 ${/[A-Z]/.test(password) ? 'text-green-600' : ''}`}>
+                                            <svg className={`w-3 h-3 ${/[A-Z]/.test(password) ? 'text-green-500' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
+                                            Заглавная буква
+                                        </li>
+                                        <li className={`flex items-center gap-2 ${/[0-9]/.test(password) ? 'text-green-600' : ''}`}>
+                                            <svg className={`w-3 h-3 ${/[0-9]/.test(password) ? 'text-green-500' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
+                                            Цифра
+                                        </li>
+                                        <li className={`flex items-center gap-2 ${/[!@#$%^&*()_+\-=[\]{};':\"\\|,.<>/?]/.test(password) ? 'text-green-600' : ''}`}>
+                                            <svg className={`w-3 h-3 ${/[!@#$%^&*()_+\-=[\]{};':\"\\|,.<>/?]/.test(password) ? 'text-green-500' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
+                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                            </svg>
+                                            Специальный символ
+                                        </li>
+                                    </ul>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Submit Button */}
+                        <div className="pt-4">
+                            <button
+                                type="submit"
+                                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                                disabled={loading}
+                            >
+                                {loading ? (
+                                    <div className="flex items-center justify-center gap-2">
+                                        <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Сохраняем...
+                                    </div>
+                                ) : (
+                                    "Сохранить изменения"
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     );
 }
