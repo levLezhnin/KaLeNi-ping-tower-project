@@ -22,6 +22,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-mail'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.kafka:spring-kafka'
+    implementation 'org.telegram:telegrambots:6.8.0'
+    implementation 'net.glxn.qrgen:javase:2.0'
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9")
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

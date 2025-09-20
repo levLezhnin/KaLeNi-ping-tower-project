@@ -25,3 +25,8 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
     notification-topic: notification-topic
     consumer-group-id: notification-consumer-group
+
+bot:
+  name: "Ping Tower Notifications Bot"
+  token: ${NOTIFICATION_SERVICE_TELEGRAM_BOT_TOKEN:}
+  link: "https://t.me/PingTowerNotificationsBot"
