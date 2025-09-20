@@ -2,46 +2,41 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB_NAME}
-      POSTGRES_USER: ${POSTGRES_DB_USERNAME}
-      POSTGRES_PASSWORD: ${POSTGRES_DB_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_USER_DB_NAME}
+      POSTGRES_USER: ${POSTGRES_USER_DB_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_USER_DB_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_user_data:/var/lib/postgresql/data
     ports:
-      - "${POSTGRES_DB_PORT}:${POSTGRES_DB_DOCKER_PORT}"
+      - "${POSTGRES_USER_DB_PORT}:${POSTGRES_USER_DB_DOCKER_PORT}"
     networks:
-      - app-network
-  db-migration:
-    image: liquibase/liquibase
-    volumes:
-      - ./db-migration:/liquibase/changelog
-    environment:
-      - LIQUIBASE_URL=jdbc:postgresql://${POSTGRES_DB_URL}:${POSTGRES_DB_PORT}/${POSTGRES_DB_NAME}
-      - LIQUIBASE_USER=${POSTGRES_DB_USERNAME}
-      - LIQUIBASE_PASSWORD=${POSTGRES_DB_PASSWORD}
-      - LIQUIBASE_CHANGELOG=/liquibase/changelog/db.changelog-master.yaml
-    depends_on:
-      - postgres
+      - shared-network
+    command:
+      - "postgres"
+      - "-c"
+      - "port=${POSTGRES_USER_DB_PORT}"
   user-service:
     build:
       context: ./user-service
       dockerfile: Dockerfile
     environment:
-      POSTGRES_DB_URL: ${POSTGRES_DB_URL}
-      POSTGRES_DB_USERNAME: ${POSTGRES_DB_USERNAME}
-      POSTGRES_DB_PASSWORD: ${POSTGRES_DB_PASSWORD}
-      POSTGRES_DB_NAME: ${POSTGRES_DB_NAME}
-      POSTGRES_DB_PORT: ${POSTGRES_DB_PORT}
-      POSTGRES_DB_DOCKER_PORT: ${POSTGRES_DB_DOCKER_PORT}
+      USER_SERVICE_PORT: ${USER_SERVICE_PORT}
+      POSTGRES_DB_URL: ${POSTGRES_DB_DOCKER_URL}
+      POSTGRES_USER_DB_USERNAME: ${POSTGRES_USER_DB_USERNAME}
+      POSTGRES_USER_DB_PASSWORD: ${POSTGRES_USER_DB_PASSWORD}
+      POSTGRES_USER_DB_NAME: ${POSTGRES_USER_DB_NAME}
+      POSTGRES_USER_DB_PORT: ${POSTGRES_USER_DB_PORT}
+      POSTGRES_USER_DB_DOCKER_PORT: ${POSTGRES_USER_DB_DOCKER_PORT}
     depends_on:
-      - db-migration
+      - postgres
     ports:
       - "${USER_SERVICE_PORT}:${USER_SERVICE_DOCKER_PORT}"
     networks:
-      - app-network
+      - shared-network
 volumes:
-  postgres_data:
+  postgres_user_data:
 
 networks:
-  app-network:
-    driver: bridge
+  shared-network:
+    external: false
+    name: ping_app_network

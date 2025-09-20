@@ -3,7 +3,7 @@ package team.kaleni.pingtowerbackend.userservice.dto.mapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import team.kaleni.pingtowerbackend.userservice.dto.request.user.UserInsertDtoRequest;
+import team.kaleni.pingtowerbackend.userservice.dto.request.UserInsertDtoRequest;
 import team.kaleni.pingtowerbackend.userservice.dto.response.UserDtoResponse;
 import team.kaleni.pingtowerbackend.userservice.entity.User;
 

@@ -9,5 +9,5 @@ RUN gradle build -x test --no-daemon
 FROM openjdk:17-jdk-slim
 WORKDIR /app
 COPY --from=build /app/build/libs/*.jar user-service-app.jar
-EXPOSE 8080
+EXPOSE ${USER_SERVICE_PORT}
 ENTRYPOINT ["java", "-jar", "user-service-app.jar"]

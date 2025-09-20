@@ -1,4 +1,4 @@
-package team.kaleni.pingtowerbackend.userservice.dto.request.user;
+package team.kaleni.pingtowerbackend.userservice.dto.request;
 
 import lombok.Data;
 import lombok.Value;
