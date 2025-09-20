@@ -1,4 +1,4 @@
-package team.kaleni.notificationservice.dto.notification;
+package team.kaleni.notificationservice.dto;
 
 import lombok.Getter;
 import lombok.Setter;
