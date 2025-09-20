@@ -63,6 +63,31 @@ public class UserService {
         return userMapper.toDto(userRepository.saveAndFlush(user));
     }
 
+    public void updateTelegramInfo(Long id, Long chatId) {
+
+        Optional<User> optUser = userRepository.findById(id);
+
+        if (optUser.isEmpty()) {
+            throw new EntityNotFoundException("Пользователь с id: " + id + " не найден.");
+        }
+
+        User user = optUser.get();
+        user.setTelegramChatId(chatId);
+
+        userRepository.saveAndFlush(user);
+    }
+
+    public void unsubscribeUserByChatId(Long chatId) {
+
+        Optional<User> optUser = userRepository.findByTelegramChatId(chatId);
+
+        if (optUser.isPresent()) {
+            User user = optUser.get();
+            user.setTelegramChatId(null);
+            userRepository.saveAndFlush(user);
+        }
+    }
+
     public boolean signIn(UserCredentialsDto userCredentialsDto) {
 
         // проверяем есть ли пользователь с таким email-ом

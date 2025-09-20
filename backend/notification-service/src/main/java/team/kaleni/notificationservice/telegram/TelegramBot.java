@@ -15,11 +15,17 @@ import team.kaleni.notificationservice.config.TelegramBotResponses;
 public class TelegramBot extends TelegramLongPollingBot {
 
     private final String botName;
+    private final String botToken;
     private final CommandsHandler commandsHandler;
 
     @Override
     public String getBotUsername() {
         return botName;
+    }
+
+    @Override
+    public String getBotToken() {
+        return botToken;
     }
 
     @Override

@@ -3,6 +3,7 @@ package team.kaleni.notificationservice.telegram.commands;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import team.kaleni.notificationservice.config.TelegramBotResponses;
@@ -38,12 +39,12 @@ public class StartCommand implements Command {
 
                 UUID uuid = UUID.fromString(uuidString.get());
 
-                telegramService.subscribeUserByUUID(uuid);
+                telegramService.subscribeUserByUUID(uuid, chatId);
                 resultTextMessage = TelegramBotResponses.MSG_SUBSCRIBE_OK;
 
-            } catch (IllegalArgumentException e) {
-                resultTextMessage = TelegramBotResponses.MSG_SUBSCRIBE_FAILED;
-            } catch (RuntimeException e) { // TODO: custom exception
+            } catch (IllegalArgumentException | RestClientException e) {
+                log.error("Something went wrong");
+                e.printStackTrace();
                 resultTextMessage = TelegramBotResponses.MSG_SUBSCRIBE_FAILED;
             }
         } else {

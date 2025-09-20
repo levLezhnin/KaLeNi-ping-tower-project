@@ -9,7 +9,6 @@ import java.util.UUID;
 @Component
 public class UserUUIDMapping {
 
-    // TODO: проблема: mapping-и не чистятся. если пользак забыл, что он хотел привязаться, то mapping не пропадёт.
     private final HashMap<Long, UUID> userUUIDMapping;
     private final HashMap<UUID, Long> uuidUserMapping;
 
@@ -29,6 +28,12 @@ public class UserUUIDMapping {
 
     public UUID generateUUIDForUserWithId(Long userId) {
         UUID uuid = UUID.randomUUID();
+
+        if (userUUIDMapping.containsKey(userId)) {
+            UUID oldUUID = userUUIDMapping.get(userId);
+            uuidUserMapping.remove(oldUUID);
+        }
+
         userUUIDMapping.put(userId, uuid);
         uuidUserMapping.put(uuid, userId);
         return userUUIDMapping.get(userId);
