@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useMonitorsStore } from "../../store/useMonitorsStore";
-import type { MonitorDetailResponse } from "../../services/monitorService";
+import type { MonitorDetailResponse } from "../../services/monitorTypes";
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
 
 export default function UrlDetails() {
@@ -51,6 +51,23 @@ export default function UrlDetails() {
           <button onClick={handleToggle} className="px-3 py-2 border border-[hsl(var(--border))] rounded">{item.enabled ? "Отключить" : "Включить"}</button>
           <button onClick={async () => { await remove(item.id); navigate("/dashboard"); }} className="px-3 py-2 border border-[hsl(var(--border))] rounded text-[hsl(var(--destructive))]">Удалить</button>
           <Link to="/dashboard" className="px-3 py-2 border border-[hsl(var(--border))] rounded">Назад</Link>
+        </div>
+      </div>
+
+      <div className="bg-[hsl(var(--card))] p-4 rounded shadow mb-6">
+        <h4 className="font-medium mb-2">Информация о сайте</h4>
+        <div className="mb-2">
+          <span className="font-semibold">Имя:</span> {item.name}
+        </div>
+        <div className="mb-2">
+          <span className="font-semibold">Описание:</span> {item.description || <span className="text-[hsl(var(--muted-foreground))]">Нет описания</span>}
+        </div>
+        <div className="mb-2">
+          <span className="font-semibold">URL:</span> {item.url}
+        </div>
+        {/* Здесь в будущем появится подробная статистика по сайту */}
+        <div className="mt-4 p-3 bg-gray-50 rounded border border-dashed border-gray-300 text-gray-500 text-sm">
+          <span>Здесь будет подробная статистика по сайту (аптайм, среднее время отклика, графики и т.д.)</span>
         </div>
       </div>
 

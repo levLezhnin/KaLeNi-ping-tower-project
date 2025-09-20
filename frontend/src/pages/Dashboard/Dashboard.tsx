@@ -81,40 +81,47 @@ export default function Dashboard() {
           <div className="space-y-2">
             {visible.length === 0 && <div className="text-[hsl(var(--muted-foreground))]">Нет мониторов</div>}
             {visible.map((m) => (
-              <div key={m.id} className="flex flex-col md:flex-row md:items-center justify-between p-3 border border-[hsl(var(--border))] rounded gap-2">
+              <div key={m.id} className="flex flex-col md:flex-row md:items-center justify-between p-3 border border-[hsl(var(--border))] rounded gap-2 bg-white dark:bg-[hsl(var(--card))]">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3">
-                    <StatusDot status={m.currentStatus} />
+                  <div className="flex items-start gap-3">
+                    <div className="pt-1"><StatusDot status={m.currentStatus} /></div>
                     <div className="truncate">
-                      <div className="flex items-center gap-2">
-                        <Link to={`/url/${m.id}`} className="font-medium truncate">{m.name}</Link>
+                      <div className="flex items-center gap-2 mb-1">
+                        <Link to={`/url/${m.id}`} className="font-medium truncate text-lg leading-tight text-gray-900 dark:text-white">{m.name}</Link>
+                        <Link
+                          to={`/url/${m.id}`}
+                          className="px-2 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200 transition"
+                          style={{ whiteSpace: 'nowrap' }}
+                        >
+                          Статистика
+                        </Link>
                         {m.method && <span className="text-xs px-2 py-0.5 rounded bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]">{m.method}</span>}
                         {m.contentType && <span className="text-xs px-2 py-0.5 rounded bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]">{m.contentType}</span>}
                       </div>
-                      {m.description && <div className="text-xs text-[hsl(var(--muted-foreground))] truncate">{m.description}</div>}
-                      <div className="text-sm text-[hsl(var(--muted-foreground))] truncate">{m.url}</div>
-                      <div className="text-xs text-[hsl(var(--muted-foreground))] flex gap-2 flex-wrap">
+                      {m.description && <div className="text-xs text-[hsl(var(--muted-foreground))] truncate mb-1">{m.description}</div>}
+                      <div className="text-sm text-blue-700 dark:text-blue-400 truncate mb-1">{m.url}</div>
+                      <div className="text-xs text-[hsl(var(--muted-foreground))] flex gap-2 flex-wrap mb-1">
                         <span>Интервал: {m.intervalSeconds}s</span>
                         <span>Таймаут: {m.timeoutMs}мс</span>
                         {m.lastCheckedAt && <span>Проверен: {new Date(m.lastCheckedAt).toLocaleString()}</span>}
                       </div>
+                      <div className="flex flex-wrap gap-2 mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                        {m.headers && Object.keys(m.headers).length > 0 && (
+                          <span>Headers: {Object.entries(m.headers).map(([k, v]) => `${k}: ${v}`).join(", ")}</span>
+                        )}
+                        {m.requestBody && m.method !== "GET" && (
+                          <span>Body: {typeof m.requestBody === "object" ? JSON.stringify(m.requestBody) : String(m.requestBody)}</span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap gap-4 mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                        {typeof m.lastResponseTimeMs === "number" && <span>Время ответа: {m.lastResponseTimeMs}мс</span>}
+                        {typeof m.lastResponseCode === "number" && <span>Код: {m.lastResponseCode}</span>}
+                        {m.lastErrorMessage && <span className="text-red-500">Ошибка: {m.lastErrorMessage}</span>}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-2 mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-                    {m.headers && Object.keys(m.headers).length > 0 && (
-                      <span>Headers: {Object.entries(m.headers).map(([k, v]) => `${k}: ${v}`).join(", ")}</span>
-                    )}
-                    {m.requestBody && m.method !== "GET" && (
-                      <span>Body: {typeof m.requestBody === "object" ? JSON.stringify(m.requestBody) : String(m.requestBody)}</span>
-                    )}
-                  </div>
-                  <div className="flex flex-wrap gap-4 mt-1 text-xs text-[hsl(var(--muted-foreground))]">
-                    {typeof m.lastResponseTimeMs === "number" && <span>Время ответа: {m.lastResponseTimeMs}мс</span>}
-                    {typeof m.lastResponseCode === "number" && <span>Код: {m.lastResponseCode}</span>}
-                    {m.lastErrorMessage && <span className="text-red-500">Ошибка: {m.lastErrorMessage}</span>}
-                  </div>
                 </div>
-                <div className="flex items-center gap-3 text-sm mt-2 md:mt-0">
+                <div className="flex items-center gap-3 text-sm mt-2 md:mt-0 md:ml-4">
                   <label className="flex items-center cursor-pointer select-none gap-2">
                     <div className="relative">
                       <input

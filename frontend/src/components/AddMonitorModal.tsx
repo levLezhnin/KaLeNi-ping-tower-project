@@ -11,13 +11,15 @@ export default function AddMonitorModal({ open, onClose, onCreated }: { open: bo
     const [headers, setHeaders] = useState([{ key: "", value: "" }]);
     const [requestBody, setRequestBody] = useState("");
     const [contentType, setContentType] = useState("application/json");
-    const [interval, setInterval] = useState(30);
+    const [intervalHours, setIntervalHours] = useState(0);
+    const [intervalMinutes, setIntervalMinutes] = useState(0);
+    const [intervalSeconds, setIntervalSeconds] = useState(30);
     const [timeout, setTimeout] = useState(3000);
 
     const create = useMonitorsStore(s => s.create);
     const [error, setError] = useState<string | null>(null);
     const resetForm = () => {
-        setName(""); setDescription(""); setUrl(""); setMethod("GET"); setHeaders([{ key: "", value: "" }]); setRequestBody(""); setContentType("application/json"); setInterval(30); setTimeout(3000); setError(null);
+        setName(""); setDescription(""); setUrl(""); setMethod("GET"); setHeaders([{ key: "", value: "" }]); setRequestBody(""); setContentType("application/json"); setIntervalHours(0); setIntervalMinutes(0); setIntervalSeconds(30); setTimeout(3000); setError(null);
     };
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,6 +41,7 @@ export default function AddMonitorModal({ open, onClose, onCreated }: { open: bo
                 return;
             }
         }
+        const totalInterval = intervalHours * 3600 + intervalMinutes * 60 + intervalSeconds;
         const payload = {
             name,
             description: description.trim() || undefined,
@@ -47,7 +50,7 @@ export default function AddMonitorModal({ open, onClose, onCreated }: { open: bo
             headers: Object.keys(headersObj).length ? headersObj : undefined,
             requestBody: reqBody,
             contentType: contentType.trim() || undefined,
-            intervalSeconds: Math.max(1, interval),
+            intervalSeconds: Math.max(1, totalInterval),
             timeoutMs: Math.max(3000, timeout),
         };
         const res = await create(payload as any);
@@ -141,20 +144,52 @@ export default function AddMonitorModal({ open, onClose, onCreated }: { open: bo
                         ))}
                         <button type="button" onClick={() => setHeaders([...headers, { key: "", value: "" }])} className="text-blue-600 text-sm">+ Добавить заголовок</button>
                     </div>
-                    <div className="flex gap-2">
-                        <div className="flex-1">
-                            <label className="block text-sm mb-1" htmlFor="interval-input">Интервал (секунд)</label>
-                            <input
-                                id="interval-input"
-                                type="number"
-                                className="border px-3 py-2 rounded w-full"
-                                placeholder="Интервал (сек)"
-                                min={1}
-                                value={interval}
-                                onChange={e => setInterval(Math.max(1, Number(e.target.value)))}
-                            />
+                    <div className="flex gap-2 items-end">
+                        <div className="flex-1 min-w-0">
+                            <label className="block text-sm mb-1">Интервал</label>
+                            <div className="flex gap-1">
+                                <div className="flex flex-col w-full">
+                                    <div className="flex gap-1">
+                                        <div className="flex flex-col w-1/3">
+                                            <span className="text-xs text-gray-500 mb-1">часы</span>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                className="border px-2 py-2 rounded w-full"
+                                                placeholder="часы"
+                                                value={intervalHours}
+                                                onChange={e => setIntervalHours(Math.max(0, Number(e.target.value)))}
+                                            />
+                                        </div>
+                                        <div className="flex flex-col w-1/3">
+                                            <span className="text-xs text-gray-500 mb-1">минуты</span>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                max={59}
+                                                className="border px-2 py-2 rounded w-full"
+                                                placeholder="мин"
+                                                value={intervalMinutes}
+                                                onChange={e => setIntervalMinutes(Math.max(0, Math.min(59, Number(e.target.value))))}
+                                            />
+                                        </div>
+                                        <div className="flex flex-col w-1/3">
+                                            <span className="text-xs text-gray-500 mb-1">секунды</span>
+                                            <input
+                                                type="number"
+                                                min={1}
+                                                max={59}
+                                                className="border px-2 py-2 rounded w-full"
+                                                placeholder="сек"
+                                                value={intervalSeconds}
+                                                onChange={e => setIntervalSeconds(Math.max(1, Math.min(59, Number(e.target.value))))}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                             <label className="block text-sm mb-1" htmlFor="timeout-input">Таймаут (мс)</label>
                             <input
                                 id="timeout-input"

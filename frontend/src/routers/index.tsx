@@ -8,6 +8,7 @@ const Login = lazy(() => import("../pages/Auth/Login"));
 const Register = lazy(() => import("../pages/Auth/Register"));
 const Dashboard = lazy(() => import("../pages/Dashboard/Dashboard"));
 const UrlDetails = lazy(() => import("../pages/UrlDetails/UrlDetails"));
+const Profile = lazy(() => import("../pages/Profile/Profile"));
 
 function Protected({ children }: { children: JSX.Element }) {
   return authService.isAuthenticated() ? children : <Navigate to="/register" replace />;
@@ -29,6 +30,13 @@ export const router = createBrowserRouter([
         )
       },
       { path: "url/:id", element: <UrlDetails /> },
+      {
+        path: "profile", element: (
+          <Protected>
+            <Profile />
+          </Protected>
+        )
+      },
     ],
   },
 ]);

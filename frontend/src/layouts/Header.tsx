@@ -42,11 +42,22 @@ export default function Header() {
               <>
                 {(authService.getUsername() || authService.getEmail()) && (
                   <div className="flex flex-col items-end mr-2">
-                    {authService.getUsername() && (
-                      <span className="font-semibold text-base text-gray-900 leading-tight">
-                        {authService.getUsername()}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {authService.getUsername() && (
+                        <span className="font-semibold text-base text-gray-900 leading-tight">
+                          {authService.getUsername()}
+                        </span>
+                      )}
+                      <Link
+                        to="/profile"
+                        className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 ml-1"
+                        title="Личный кабинет"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.5 20.25a8.25 8.25 0 1115 0v.75a.75.75 0 01-.75.75h-13.5a.75.75 0 01-.75-.75v-.75z" />
+                        </svg>
+                      </Link>
+                    </div>
                     {authService.getEmail() && (
                       <span className="text-xs text-gray-500 leading-tight">
                         {authService.getEmail()}
