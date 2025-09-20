@@ -1,6 +1,5 @@
 package team.kaleni.ping.tower.backend.url_service.service;
 
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -49,11 +48,8 @@ public class MonitorStatusService {
                 return Optional.empty();
             }
 
-            // 🔥 ИСПРАВЛЕНО: Правильная десериализация из LinkedHashMap
-            if (rawValue instanceof MonitorStatusDTO) {
-                return Optional.of((MonitorStatusDTO) rawValue);
-            } else if (rawValue instanceof java.util.Map) {
-                // Преобразуем LinkedHashMap в MonitorStatusDTO
+            // 🔥 Теперь всегда ожидаем Map
+            if (rawValue instanceof java.util.Map) {
                 java.util.Map<String, Object> map = (java.util.Map<String, Object>) rawValue;
 
                 MonitorStatusDTO statusDto = MonitorStatusDTO.builder()
@@ -66,15 +62,16 @@ public class MonitorStatusService {
 
                 return Optional.of(statusDto);
             } else {
-                log.warn("Unexpected data type in Redis for monitor {}: {}", monitorId, rawValue.getClass());
+                log.warn("Unexpected data format for monitor {} status: {}", monitorId, rawValue.getClass());
                 return Optional.empty();
             }
 
         } catch (Exception e) {
-            log.error("Error getting status for monitor {}: {}", monitorId, e.getMessage());
+            log.warn("Error reading status for monitor {}, returning empty: {}", monitorId, e.getMessage());
             return Optional.empty();
         }
     }
+
 
     public void addToPingQueue(Long monitorId, Instant nextPingTime) {
         redisTemplate.opsForZSet().add(QUEUE_KEY, monitorId.toString(), nextPingTime.getEpochSecond());
@@ -100,33 +97,28 @@ public class MonitorStatusService {
         log.info("Initialized status for monitor {}", monitorId);
     }
 
+    // Helper methods
     private PingStatus parseStatus(Object obj) {
         if (obj == null) return PingStatus.UNKNOWN;
-        if (obj instanceof PingStatus) return (PingStatus) obj;
-        if (obj instanceof String) {
-            try {
-                return PingStatus.valueOf((String) obj);
-            } catch (IllegalArgumentException e) {
-                return PingStatus.UNKNOWN;
-            }
+
+        String statusStr = obj.toString();
+        try {
+            return PingStatus.valueOf(statusStr);
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown PingStatus: {}", statusStr);
+            return PingStatus.UNKNOWN;
         }
-        return PingStatus.UNKNOWN;
     }
 
     private Instant parseInstant(Object obj) {
         if (obj == null) return null;
-        if (obj instanceof Instant) return (Instant) obj;
-        if (obj instanceof String) {
-            try {
-                return Instant.parse((String) obj);
-            } catch (Exception e) {
-                return null;
-            }
+
+        try {
+            return Instant.parse(obj.toString());
+        } catch (Exception e) {
+            log.warn("Failed to parse Instant: {}", obj);
+            return null;
         }
-        if (obj instanceof Number) {
-            return Instant.ofEpochSecond(((Number) obj).longValue());
-        }
-        return null;
     }
 
     private Integer parseInteger(Object obj) {
@@ -144,8 +136,6 @@ public class MonitorStatusService {
     }
 
     private String parseString(Object obj) {
-        if (obj == null) return null;
-        return obj.toString();
+        return obj != null ? obj.toString() : null;
     }
 }
-
