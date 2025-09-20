@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import team.kaleni.pingtowerbackend.userservice.dto.request.user.UserUpdateDtoRequest;
+import team.kaleni.pingtowerbackend.userservice.dto.request.UserUpdateDtoRequest;
 import team.kaleni.pingtowerbackend.userservice.dto.response.UserDtoResponse;
 import team.kaleni.pingtowerbackend.userservice.service.UserService;
 

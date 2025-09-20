@@ -1,13 +1,19 @@
+server:
+  port: ${USER_SERVICE_PORT}
+
 spring:
   application:
     name: Ping-Tower-Backend-User-Service
   datasource:
-    url: jdbc:postgresql://${POSTGRES_DB_URL}:${POSTGRES_DB_PORT}/${POSTGRES_DB_NAME}
-    username: ${POSTGRES_DB_USERNAME}
-    password: ${POSTGRES_DB_PASSWORD}
+    url: jdbc:postgresql://${POSTGRES_DB_URL}:${POSTGRES_USER_DB_PORT}/${POSTGRES_USER_DB_NAME}
+    username: ${POSTGRES_USER_DB_USERNAME}
+    password: ${POSTGRES_USER_DB_PASSWORD}
     driverClassName: org.postgresql.Driver
   jpa:
+    databasePlatform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+    hibernate:
+      ddl-auto: update

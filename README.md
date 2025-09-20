@@ -1,93 +1,238 @@
-# Simple Ping App
-
-
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+# Инструкция по запуску и управлению системой
+(Made by Perplexity)
+## Структура проекта
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/nikita96max/simple-ping-app.git
-git branch -M main
-git push -uf origin main
+root/
+├── docker-compose.yml          # Главный файл оркестрации
+├── .env                       # Переменные окружения для всей системы
+├── backend/
+│   ├── url_service/
+│   │   └── Dockerfile         # Образ для URL сервиса
+│   └── user_service/
+│       └── Dockerfile         # Образ для User сервиса
+└── frontend/
+    ├── Dockerfile             # Образ для Frontend
+    └── vite.config.ts         # Конфигурация Vite с проксированием
 ```
 
-## Integrate with your tools
+## Первоначальный запуск системы
 
-- [ ] [Set up project integrations](https://gitlab.com/nikita96max/simple-ping-app/-/settings/integrations)
+### 1. Подготовка файлов
+Убедитесь, что созданы файлы:
+- `root/docker-compose.yml` (главный файл оркестрации)
+- `root/.env` (переменные окружения)
+- Обновлен `frontend/vite.config.ts` с правильным именем контейнера
 
-## Collaborate with your team
+### 2. Запуск всей системы
+```bash
+# Перейти в корневую директорию проекта
+cd root/
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+# Запуск всех сервисов в фоновом режиме
+docker-compose up -d
 
-## Test and Deploy
+# Запуск с отображением логов в реальном времени
+docker-compose up
 
-Use the built-in continuous integration in GitLab.
+# Запуск с принудительной пересборкой всех образов
+docker-compose up --build -d
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### 3. Проверка статуса
+```bash
+# Показать статус всех контейнеров
+docker-compose ps
 
-***
+# Показать логи всех сервисов
+docker-compose logs
 
-# Editing this README
+# Показать логи конкретного сервиса
+docker-compose logs url_service
+docker-compose logs user_service
+docker-compose logs frontend
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+## Доступ к сервисам
 
-## Suggestions for a good README
+После запуска сервисы доступны по адресам:
+- **Frontend**: http://localhost:5173
+- **URL Service API**: http://localhost:8080
+- **User Service API**: http://localhost:8081
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+## Работа с отдельными контейнерами
 
-## Name
-Choose a self-explaining name for your project.
+### Пересборка конкретного сервиса
+```bash
+# Пересобрать только URL Service
+docker-compose build url_service
+docker-compose up -d url_service
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+# Пересобрать только User Service  
+docker-compose build user_service
+docker-compose up -d user_service
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+# Пересобрать только Frontend
+docker-compose build frontend
+docker-compose up -d frontend
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### Перезапуск конкретного сервиса
+```bash
+# Перезапустить URL Service (без пересборки)
+docker-compose restart url_service
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+# Остановить и запустить заново с зависимостями
+docker-compose stop url_service
+docker-compose up -d url_service
+```
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+### Обновление после изменений в коде
+```bash
+# Если изменили код URL Service
+docker-compose build url_service
+docker-compose up -d url_service
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+# Если изменили код User Service
+docker-compose build user_service  
+docker-compose up -d user_service
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+# Если изменили код Frontend
+docker-compose build frontend
+docker-compose up -d frontend
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## Управление базами данных
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+### Доступ к базам данных для отладки
+```bash
+# Подключиться к базе URL Service
+docker exec -it url_service_db psql -U url_user -d url_service_db
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+# Подключиться к базе User Service
+docker exec -it user_service_db psql -U user_admin -d user_service_db
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+# Показать логи базы данных
+docker-compose logs url_service_db
+docker-compose logs user_service_db
+```
 
-## License
-For open source projects, say how it is licensed.
+### Очистка данных базы (ОСТОРОЖНО!)
+```bash
+# Остановить систему и удалить все данные БД
+docker-compose down -v
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+# Удалить конкретный volume
+docker volume rm url_postgres_data
+docker volume rm user_postgres_data
+```
+
+## Полезные команды
+
+### Мониторинг системы
+```bash
+# Просмотр ресурсов контейнеров
+docker stats
+
+# Просмотр сетей
+docker network ls
+docker network inspect ping_app_network
+
+# Просмотр volumes
+docker volume ls
+```
+
+### Логи и отладка
+```bash
+# Следить за логами в реальном времени
+docker-compose logs -f
+
+# Логи конкретного сервиса за последние 100 строк
+docker-compose logs --tail=100 url_service
+
+# Логи с временными метками
+docker-compose logs -t frontend
+```
+
+### Очистка системы
+```bash
+# Остановить все сервисы
+docker-compose down
+
+# Остановить и удалить все volumes (УДАЛИТ ДАННЫЕ БД!)
+docker-compose down -v
+
+# Удалить неиспользуемые образы и контейнеры
+docker system prune
+
+# Полная очистка системы Docker (ОСТОРОЖНО!)
+docker system prune -a --volumes
+```
+
+## Разработка и отладка
+
+### Подключение к работающему контейнеру
+```bash
+# Зайти в контейнер с URL Service
+docker exec -it url_service sh
+
+# Зайти в контейнер с Frontend
+docker exec -it frontend sh
+
+# Запустить bash (если доступен)
+docker exec -it url_service bash
+```
+
+### Проверка конфигурации
+```bash
+# Проверить синтаксис docker-compose.yml
+docker-compose config
+
+# Показать итоговую конфигурацию с подставленными переменными
+docker-compose config --services
+```
+
+### Изменение переменных окружения
+1. Отредактировать файл `root/.env`
+2. Перезапустить сервисы:
+```bash
+docker-compose down
+docker-compose up -d
+```
+
+## Troubleshooting
+
+### Проблемы с сетью
+```bash
+# Проверить сетевые соединения между контейнерами
+docker exec -it frontend ping url_service
+docker exec -it url_service ping url_service_db
+```
+
+### Проблемы с портами
+```bash
+# Проверить, какие порты заняты
+netstat -tlnp | grep :8080
+netstat -tlnp | grep :5173
+
+# Освободить порт (изменить в .env файле)
+```
+
+### Проблемы с образами
+```bash
+# Принудительная пересборка без кеша
+docker-compose build --no-cache url_service
+
+# Удалить образ и пересобрать
+docker rmi root_url_service
+docker-compose build url_service
+```
+
+## Рабочий процесс разработки
+
+1. **Изменили код** → `docker-compose build <service_name>` → `docker-compose up -d <service_name>`
+2. **Изменили .env** → `docker-compose down` → `docker-compose up -d`
+3. **Изменили docker-compose.yml** → `docker-compose down` → `docker-compose up -d`
+4. **Проблемы с БД** → Проверить логи → При необходимости пересоздать volume
+
+Система готова к разработке! Все сервисы взаимодействуют через внутреннюю Docker сеть `ping_app_network`.

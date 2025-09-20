@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import team.kaleni.pingtowerbackend.userservice.dto.request.user.UserCredentialsDto;
-import team.kaleni.pingtowerbackend.userservice.dto.request.user.UserInsertDtoRequest;
+import team.kaleni.pingtowerbackend.userservice.dto.request.UserCredentialsDto;
+import team.kaleni.pingtowerbackend.userservice.dto.request.UserInsertDtoRequest;
 import team.kaleni.pingtowerbackend.userservice.dto.response.UserDtoResponse;
 import team.kaleni.pingtowerbackend.userservice.service.UserService;
 
