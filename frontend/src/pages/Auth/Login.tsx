@@ -22,36 +22,82 @@ export default function Login() {
   };
 
   return (
-    <div className="max-w-md mx-auto my-16 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))] p-8 rounded-xl shadow">
-      <h3 className="text-2xl font-semibold mb-4">Войти</h3>
-      <form onSubmit={submit} className="space-y-4">
-        {errors && <div className="text-red-600 text-sm">{errors}</div>}
-        <label className="block">
-          <span className="text-sm text-[hsl(var(--muted-foreground))]">Email</span>
-          <input
-            className="mt-1 block w-full border border-[hsl(var(--border))] rounded px-3 py-2 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </label>
-        <label className="block">
-          <span className="text-sm text-[hsl(var(--muted-foreground))]">Пароль</span>
-          <input
-            type="password"
-            className="mt-1 block w-full border border-[hsl(var(--border))] rounded px-3 py-2 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
-            value={pwd}
-            onChange={(e) => setPwd(e.target.value)}
-          />
-        </label>
-        <div className="flex items-center justify-between">
-          <button className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] px-4 py-2 rounded">
-            Войти
-          </button>
-          <a className="text-sm text-[hsl(var(--muted-foreground))]" href="/register">
-            Нет аккаунта? Зарегистрироваться
-          </a>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8 text-center">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-white">Добро пожаловать</h1>
+            <p className="text-blue-100 mt-2">Войдите в свой аккаунт MonitorPro</p>
+          </div>
+
+          {/* Form */}
+          <div className="p-6">
+            <form onSubmit={submit} className="space-y-6">
+              {errors && (
+                <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-red-700 dark:text-red-400 text-sm font-medium">{errors}</span>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Введите email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Пароль *
+                </label>
+                <input
+                  type="password"
+                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                  placeholder="Введите пароль"
+                  value={pwd}
+                  onChange={(e) => setPwd(e.target.value)}
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Войти
+              </button>
+
+              <div className="text-center">
+                <span className="text-sm text-gray-600 dark:text-gray-400">Нет аккаунта? </span>
+                <a
+                  href="/register"
+                  className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                >
+                  Зарегистрироваться
+                </a>
+              </div>
+            </form>
+          </div>
         </div>
-      </form>
+      </div>
     </div>
   );
 }
