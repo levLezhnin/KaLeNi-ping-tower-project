@@ -5,14 +5,15 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-  port: 5173,
-  open: false,
-  proxy: {
-    "/api": {
-      target: "http://url-service-app:8080", 
-      changeOrigin: true,
-      secure: false,
+    host: "0.0.0.0", // Важно! Позволяет принимать соединения извне контейнера
+    port: 5173,
+    open: false,
+    proxy: {
+      "/api": {
+        target: "http://url_service:8080", // Исправлено имя контейнера
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
-}
 });
