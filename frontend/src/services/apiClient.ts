@@ -10,8 +10,15 @@ export const api = axios.create({
     },
 });
 
+export const apiAuth = axios.create({
+    baseURL: BACKEND_URL,
+    headers: {
+        "Content-Type": "application/json",
+    },
+});
+
 api.interceptors.request.use((config) => {
-    const ownerId = DEFAULT_OWNER_ID;
+    const ownerId = localStorage.getItem("monitorpro_owner_id") || DEFAULT_OWNER_ID;
     config.headers = config.headers || {};
     (config.headers as Record<string, any>)["X-Owner-Id"] = parseInt(ownerId, 10);
 

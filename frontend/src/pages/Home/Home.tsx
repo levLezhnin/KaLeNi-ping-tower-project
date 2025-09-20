@@ -25,12 +25,20 @@ export default function Home() {
                 Перейти в дашборд
               </Link>
             ) : (
-              <Link
-                to="/register"
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700"
-              >
-                Регистрация
-              </Link>
+              <>
+                <Link
+                  to="/register"
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700"
+                >
+                  Регистрация
+                </Link>
+                <Link
+                  to="/login"
+                  className="bg-gray-200 text-blue-700 px-6 py-3 rounded-lg shadow hover:bg-gray-300 border border-blue-600"
+                >
+                  Вход
+                </Link>
+              </>
             )}
           </div>
         </div>

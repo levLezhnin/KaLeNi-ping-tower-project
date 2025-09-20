@@ -6,6 +6,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [pwd2, setPwd2] = useState("");
+  const [username, setUsername] = useState("");
   const [errors, setErrors] = useState<string | null>(null);
   const navigate = useNavigate();
 
@@ -13,14 +14,22 @@ export default function Register() {
     e.preventDefault();
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const errs: string[] = [];
+    if (!username.trim()) errs.push("Введите имя пользователя");
     if (!email.trim()) errs.push("Введите email");
     else if (!emailRe.test(email)) errs.push("Некорректный email");
     if (!pwd) errs.push("Введите пароль");
+    else {
+      if (pwd.length <= 8) errs.push("Пароль должен быть длиннее 8 символов");
+      if (!/[A-Z]/.test(pwd)) errs.push("Пароль должен содержать хотя бы одну заглавную букву");
+      if (!/[0-9]/.test(pwd)) errs.push("Пароль должен содержать хотя бы одну цифру");
+      if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(pwd)) errs.push("Пароль должен содержать хотя бы один специальный символ");
+      if (!/^[A-Za-z0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]+$/.test(pwd)) errs.push("Пароль должен содержать только латинские буквы, цифры и спецсимволы");
+    }
     if (!pwd2) errs.push("Подтвердите пароль");
     if (pwd && pwd2 && pwd !== pwd2) errs.push("Пароли не совпадают");
     if (errs.length) { setErrors(errs.join(". ")); return; }
     setErrors(null);
-    await authService.register({ email, password: pwd });
+    await authService.register({ username, email, password: pwd });
     navigate("/dashboard");
   };
 
@@ -29,6 +38,14 @@ export default function Register() {
       <h3 className="text-2xl font-semibold mb-4">Регистрация</h3>
       <form onSubmit={submit} className="space-y-4">
         {errors && <div className="text-red-600 text-sm">{errors}</div>}
+        <label className="block">
+          <span className="text-sm text-[hsl(var(--muted-foreground))]">Имя пользователя</span>
+          <input
+            className="mt-1 block w-full border border-[hsl(var(--border))] rounded px-3 py-2 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+        </label>
         <label className="block">
           <span className="text-sm text-[hsl(var(--muted-foreground))]">Email</span>
           <input
