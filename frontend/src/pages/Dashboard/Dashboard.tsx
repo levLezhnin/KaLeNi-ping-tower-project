@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useMonitorsStore } from "../../store/useMonitorsStore";
-import { useGroupsStore } from "../../store/useGroupsStore";
-import type { CreateMonitorRequest, MonitorDetailResponse } from "../../services/monitorTypes";
+import type { MonitorDetailResponse } from "../../services/monitorTypes";
+import AddMonitorModal from "../../components/AddMonitorModal";
 
 function StatusDot({ status }: { status: MonitorDetailResponse["currentStatus"] }) {
   const cls =
@@ -15,19 +15,13 @@ function StatusDot({ status }: { status: MonitorDetailResponse["currentStatus"] 
 }
 
 export default function Dashboard() {
-  const { monitors, fetchAll, create, remove, update, enable, disable, loading, error } = useMonitorsStore();
-  const { groups, fetchAll: fetchGroups } = useGroupsStore();
+  const { monitors, fetchAll, remove, enable, disable, loading } = useMonitorsStore();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "up" | "down">("all");
-  const [name, setName] = useState("");
-  const [url, setUrl] = useState("");
-  const [interval, setInterval] = useState<number>(60);
-  const [submitting, setSubmitting] = useState(false);
-  const [addError, setAddError] = useState<string | null>(null);
+  const [addModalOpen, setAddModalOpen] = useState(false);
 
   useEffect(() => {
     fetchAll();
-    fetchGroups();
   }, []);
 
   const visible = useMemo(() => {
@@ -42,37 +36,6 @@ export default function Dashboard() {
       );
     return list;
   }, [monitors, q, filter]);
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !url) return;
-    setSubmitting(true);
-
-    // Собираем payload
-    const payload: CreateMonitorRequest = {
-      name,
-      description: "",
-      url,
-      intervalSeconds: Math.max(30, interval),
-      timeoutMs: 1000,
-    };
-
-    // Добавляем groupId только если он задан и не 0
-    // if (groupId && groupId > 0) {
-    //   payload.groupId = groupId;
-    // }
-
-    const res = await create(payload);
-
-    if (!res) {
-      setAddError(error || "Не удалось создать монитор");
-    } else {
-      setAddError(null);
-      setName(""); setUrl(""); setInterval(60);
-    }
-
-    setSubmitting(false);
-  };
 
   return (
     <div className="max-w-7xl mx-auto p-6 text-[hsl(var(--foreground))]">
@@ -94,89 +57,75 @@ export default function Dashboard() {
             <option value="up">Только доступные</option>
             <option value="down">Только недоступные</option>
           </select>
+          <button
+            className="ml-4 bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] px-4 py-2 rounded shadow hover:bg-[hsl(var(--primary-dark))]"
+            onClick={() => setAddModalOpen(true)}
+          >
+            Добавить сайт
+          </button>
         </div>
       </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Groups Panel hidden for now */}
-        {false && (
-          <div className="bg-[hsl(var(--card))] p-4 rounded shadow"></div>
-        )}
-        <div className="bg-[hsl(var(--card))] p-4 rounded shadow">
-          <h4 className="font-medium mb-2">Добавить URL</h4>
-          <form onSubmit={handleAdd} className="space-y-2">
-            {addError && <div className="text-sm text-red-600">{addError}</div>}
-            <input
-              placeholder="Название"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full border border-[hsl(var(--border))] px-3 py-2 rounded bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
-            />
-            <input
-              placeholder="https://..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              className="w-full border border-[hsl(var(--border))] px-3 py-2 rounded bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
-            />
-            <div className="flex items-center gap-2">
-              <input
-                type="number"
-                value={interval}
-                onChange={(e) => setInterval(Number(e.target.value))}
-                className="border border-[hsl(var(--border))] px-3 py-2 rounded w-28 bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
-              />
-              <span className="text-sm text-[hsl(var(--muted-foreground))]">секунд</span>
-            </div>
-            <button disabled={submitting} className="bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] px-4 py-2 rounded disabled:opacity-60">
-              {submitting ? "Добавляю..." : "Добавить"}
-            </button>
-          </form>
-        </div>
-
-        <div className="col-span-2 bg-[hsl(var(--card))] p-4 rounded shadow">
-          <h4 className="font-medium mb-3">Мониторы</h4>
-          {loading ? (
-            <div>Загрузка...</div>
-          ) : (
-            <div className="space-y-2">
-              {visible.length === 0 && <div className="text-[hsl(var(--muted-foreground))]">Нет мониторов</div>}
-              {visible.map((m) => (
-                <div key={m.id} className="flex items-center justify-between p-3 border border-[hsl(var(--border))] rounded">
+      <AddMonitorModal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onCreated={() => {
+          setAddModalOpen(false);
+          fetchAll();
+        }}
+      />
+      <div className="w-full bg-[hsl(var(--card))] p-4 rounded shadow mb-8">
+        <h4 className="font-medium mb-3">Мониторы</h4>
+        {loading ? (
+          <div>Загрузка...</div>
+        ) : (
+          <div className="space-y-2">
+            {visible.length === 0 && <div className="text-[hsl(var(--muted-foreground))]">Нет мониторов</div>}
+            {visible.map((m) => (
+              <div key={m.id} className="flex flex-col md:flex-row md:items-center justify-between p-3 border border-[hsl(var(--border))] rounded gap-2">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3">
                     <StatusDot status={m.currentStatus} />
-                    <div>
-                      <Link to={`/url/${m.id}`} className="font-medium">{m.name}</Link>
-                      <div className="text-sm text-[hsl(var(--muted-foreground))]">{m.url}</div>
-                      <div className="text-xs text-[hsl(var(--muted-foreground))]">Группа: {m.groupId ? (groups.find(g => g.id === m.groupId)?.name || `#${m.groupId}`) : "без группы"}</div>
+                    <div className="truncate">
+                      <div className="flex items-center gap-2">
+                        <Link to={`/url/${m.id}`} className="font-medium truncate">{m.name}</Link>
+                        {m.method && <span className="text-xs px-2 py-0.5 rounded bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]">{m.method}</span>}
+                        {m.contentType && <span className="text-xs px-2 py-0.5 rounded bg-[hsl(var(--muted))] text-[hsl(var(--muted-foreground))]">{m.contentType}</span>}
+                      </div>
+                      {m.description && <div className="text-xs text-[hsl(var(--muted-foreground))] truncate">{m.description}</div>}
+                      <div className="text-sm text-[hsl(var(--muted-foreground))] truncate">{m.url}</div>
+                      <div className="text-xs text-[hsl(var(--muted-foreground))] flex gap-2 flex-wrap">
+                        <span>Интервал: {m.intervalSeconds}s</span>
+                        <span>Таймаут: {m.timeoutMs}мс</span>
+                        {m.lastCheckedAt && <span>Проверен: {new Date(m.lastCheckedAt).toLocaleString()}</span>}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-sm">
-                    <div className="text-[hsl(var(--muted-foreground))]">{m.intervalSeconds}s</div>
-                    <select
-                      value={m.groupId ?? ''}
-                      onChange={async (e) => {
-                        const val = e.target.value;
-                        await update(m.id, { groupId: val ? Number(val) : undefined });
-                      }}
-                      className="px-2 py-1 border border-[hsl(var(--border))] rounded bg-[hsl(var(--card))] text-[hsl(var(--card-foreground))]"
-                    >
-                      <option value=''>Без группы</option>
-                      {/* {Array.isArray(groups) && groups.map(g => (
-                        <option key={g.id} value={g.id}>{g.name}</option>
-                      ))} */}
-                    </select>
-                    {m.enabled ? (
-                      <button onClick={() => disable(m.id)} className="px-2 py-1 border border-[hsl(var(--border))] rounded">Отключить</button>
-                    ) : (
-                      <button onClick={() => enable(m.id)} className="px-2 py-1 border border-[hsl(var(--border))] rounded">Включить</button>
+                  <div className="flex flex-wrap gap-2 mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                    {m.headers && Object.keys(m.headers).length > 0 && (
+                      <span>Headers: {Object.entries(m.headers).map(([k, v]) => `${k}: ${v}`).join(", ")}</span>
                     )}
-                    <button onClick={() => remove(m.id)} className="px-2 py-1 border border-[hsl(var(--border))] rounded text-[hsl(var(--destructive))]">Удалить</button>
+                    {m.requestBody && m.method !== "GET" && (
+                      <span>Body: {typeof m.requestBody === "object" ? JSON.stringify(m.requestBody) : String(m.requestBody)}</span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-4 mt-1 text-xs text-[hsl(var(--muted-foreground))]">
+                    {typeof m.lastResponseTimeMs === "number" && <span>Время ответа: {m.lastResponseTimeMs}мс</span>}
+                    {typeof m.lastResponseCode === "number" && <span>Код: {m.lastResponseCode}</span>}
+                    {m.lastErrorMessage && <span className="text-red-500">Ошибка: {m.lastErrorMessage}</span>}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <div className="flex items-center gap-3 text-sm mt-2 md:mt-0">
+                  {m.enabled ? (
+                    <button onClick={() => disable(m.id)} className="px-2 py-1 border border-[hsl(var(--border))] rounded">Отключить</button>
+                  ) : (
+                    <button onClick={() => enable(m.id)} className="px-2 py-1 border border-[hsl(var(--border))] rounded">Включить</button>
+                  )}
+                  <button onClick={() => remove(m.id)} className="px-2 py-1 border border-[hsl(var(--border))] rounded text-[hsl(var(--destructive))]">Удалить</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
