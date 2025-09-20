@@ -47,7 +47,7 @@ public class GroupService {
         MonitorGroup group = monitorGroupRepository.findByIdAndOwnerId(groupId, ownerId)
                 .orElseThrow(() -> new IllegalArgumentException("Group not found or not owned by user"));
         GroupResponse groupResponse =  mapToResponse(group);
-        List<MonitorDetailResponse> monitors = monitorService.getMonitorsWithinGroup(group);
+        List<MonitorDetailResponse> monitors = monitorService.getMonitorsWithinGroup(ownerId, group.getId());
         return GroupWithListResponse
                 .builder()
                 .group(groupResponse)

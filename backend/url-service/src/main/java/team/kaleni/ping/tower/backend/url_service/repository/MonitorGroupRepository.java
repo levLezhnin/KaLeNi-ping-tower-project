@@ -12,25 +12,28 @@ import java.util.Optional;
 @Repository
 public interface MonitorGroupRepository extends JpaRepository<MonitorGroup, Long> {
 
-    // Find by owner
+    // ✅ Find by owner
     List<MonitorGroup> findByOwnerId(Integer ownerId);
 
-    // Find by owner and name (for unique validation within user)
+    // ✅ Find by owner and name (for unique validation within user)
     Optional<MonitorGroup> findByOwnerIdAndName(Integer ownerId, String name);
 
-    // Find by owner and id (for security - ensure user owns the group)
+    // ✅ Find by owner and id (for security - ensure user owns the group)
     Optional<MonitorGroup> findByIdAndOwnerId(Long id, Integer ownerId);
 
-    // Find groups with their monitors (for dashboard)
-    @Query("SELECT g FROM MonitorGroup g LEFT JOIN FETCH g.monitors WHERE g.ownerId = :ownerId")
-    List<MonitorGroup> findByOwnerIdWithMonitors(@Param("ownerId") Integer ownerId);
+    // 🔥 ИСПРАВЛЕНО: убрали LEFT JOIN FETCH g.monitors - теперь monitors хранят ссылку на group, а не наоборот
+    @Query("SELECT g FROM MonitorGroup g WHERE g.ownerId = :ownerId ORDER BY g.name ASC")
+    List<MonitorGroup> findByOwnerIdOrderByName(@Param("ownerId") Integer ownerId);
 
-    // Find by name and owner excluding specific ID (for update validation)
+    // ✅ Find by name and owner excluding specific ID (for update validation)
     @Query("SELECT g FROM MonitorGroup g WHERE g.ownerId = :ownerId AND g.name = :name AND g.id != :excludeId")
     Optional<MonitorGroup> findByOwnerIdAndNameExcludingId(@Param("ownerId") Integer ownerId,
                                                            @Param("name") String name,
                                                            @Param("excludeId") Long excludeId);
 
-    // Count groups by owner
+    // ✅ Count groups by owner
     long countByOwnerId(Integer ownerId);
+
+    // ✅ Find all groups by IDs (для batch операций)
+    List<MonitorGroup> findByIdIn(List<Long> ids);
 }
