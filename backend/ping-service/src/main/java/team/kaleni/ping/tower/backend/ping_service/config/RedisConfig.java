@@ -26,11 +26,6 @@ public class RedisConfig {
         // JSON serializer с правильной типизацией
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
-        mapper.activateDefaultTyping(
-                mapper.getPolymorphicTypeValidator(),
-                DefaultTyping.NON_FINAL,
-                JsonTypeInfo.As.PROPERTY
-        );
 
         GenericJackson2JsonRedisSerializer jsonSerializer = new GenericJackson2JsonRedisSerializer(mapper);
 

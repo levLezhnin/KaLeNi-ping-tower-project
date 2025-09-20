@@ -50,7 +50,7 @@ public class RedisMonitorService {
 
     /**
      * Получить конфигурацию монитора из URL Service через Redis
-     * Если конфигурации нет в Redis, возвращаем mock для тестирования
+     * Если конфигурации нет в Redis, пипяу
      */
     public Optional<MonitorConfigDto> getMonitorConfig(Long monitorId) {
         String configKey = CONFIG_KEY_PREFIX + monitorId;
@@ -59,8 +59,8 @@ public class RedisMonitorService {
             Object rawConfig = redisTemplate.opsForValue().get(configKey);
 
             if (rawConfig == null) {
-                log.debug("Monitor config not found in Redis for monitor {}, creating mock config", monitorId);
-                return createMockConfig(monitorId);
+                log.warn("Monitor config not found in Redis for monitor {}", monitorId);
+                return Optional.empty();
             }
 
             if (rawConfig instanceof MonitorConfigDto) {
@@ -70,12 +70,12 @@ public class RedisMonitorService {
                 return Optional.of(config);
             } else {
                 log.warn("Unexpected config format for monitor {}: {}", monitorId, rawConfig.getClass());
-                return createMockConfig(monitorId);
+                return Optional.empty();
             }
 
         } catch (Exception e) {
             log.error("Error getting config for monitor {}: {}", monitorId, e.getMessage());
-            return createMockConfig(monitorId);
+            return Optional.empty();
         }
     }
 
@@ -87,16 +87,16 @@ public class RedisMonitorService {
 
         String statusKey = STATUS_KEY_PREFIX + monitorId;
 
-        MonitorStatusDto statusDto = MonitorStatusDto.builder()
-                .status(status)
-                .lastCheckedAt(Instant.now())
-                .responseTimeMs(responseTimeMs)
-                .responseCode(responseCode)
-                .errorMessage(errorMessage)
-                .build();
+        // 🔥 Сохраняем как простой Map вместо DTO
+        Map<String, Object> statusData = new HashMap<>();
+        statusData.put("status", status.name()); // Сохраняем как строку!
+        statusData.put("lastCheckedAt", Instant.now().toString()); // Как строку!
+        statusData.put("responseTimeMs", responseTimeMs);
+        statusData.put("responseCode", responseCode);
+        statusData.put("errorMessage", errorMessage);
 
         try {
-            redisTemplate.opsForValue().set(statusKey, statusDto, 7, TimeUnit.DAYS);
+            redisTemplate.opsForValue().set(statusKey, statusData, 7, TimeUnit.DAYS);
             log.debug("Updated status for monitor {}: {}", monitorId, status);
         } catch (Exception e) {
             log.error("Error updating status for monitor {}: {}", monitorId, e.getMessage());
@@ -185,21 +185,6 @@ public class RedisMonitorService {
     }
 
     // Helper methods
-
-    private Optional<MonitorConfigDto> createMockConfig(Long monitorId) {
-        // Создаем mock конфигурацию для тестирования
-        MonitorConfigDto mockConfig = MonitorConfigDto.builder()
-                .monitorId(monitorId)
-                .url("https://httpbin.org/status/200")
-                .method(HttpMethod.GET)
-                .timeoutMs(10000)
-                .intervalSeconds(300)
-                .headers(Map.of("User-Agent", "PingTowerBot/1.0"))
-                .build();
-
-        log.debug("Created mock config for monitor {}", monitorId);
-        return Optional.of(mockConfig);
-    }
 
     private MonitorConfigDto mapToMonitorConfig(Map<String, Object> map, Long monitorId) {
         return MonitorConfigDto.builder()

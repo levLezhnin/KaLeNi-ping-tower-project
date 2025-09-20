@@ -12,6 +12,7 @@ import team.kaleni.ping.tower.backend.ping_service.dto.PingResultDto;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,7 +50,7 @@ public class PingSchedulerService {
                 return;
             }
 
-            log.info("Processing {} monitors from ping queue: []", monitorsToProcess.size(),
+            log.info("Processing {} monitors from ping queue: [{}]", monitorsToProcess.size(),
                     monitorsToProcess.stream().map(Object::toString).collect(Collectors.joining(",")));
 
             // Помечаем как обрабатываемые
@@ -94,13 +95,17 @@ public class PingSchedulerService {
         return CompletableFuture.runAsync(() -> {
             try {
                 // 1. Получаем конфигурацию монитора
-                MonitorConfigDto config = redisMonitorService.getMonitorConfig(monitorId)
-                        .orElse(null);
+                Optional<MonitorConfigDto> configOpt = redisMonitorService.getMonitorConfig(monitorId);
 
-                if (config == null) {
-                    log.warn("Monitor config not found for monitor {}", monitorId);
+                if (configOpt.isEmpty()) {
+                    log.warn("Monitor config not found for monitor {}, skipping", monitorId);
+                    // Планируем повторную попытку через 5 минут
+                    redisMonitorService.scheduleNextPing(monitorId, 300);
                     return;
                 }
+
+                MonitorConfigDto config = configOpt.get();
+                // todo: check if monitor is active
 
                 // 2. Выполняем пинг
                 var pingResult = pingService.pingMonitor(config);
