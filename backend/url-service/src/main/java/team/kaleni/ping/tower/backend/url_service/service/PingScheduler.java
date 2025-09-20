@@ -61,76 +61,76 @@ public class PingScheduler {
                 threadPoolSize, maxQueueSize);
     }
 
-    @Scheduled(fixedDelay = 5000) // Run every 5 seconds
-    public void executePingCycle() {
-        log.info("Start new Ping Cycle");
-        try {
-            Instant now = Instant.now();
-
-            // Find monitors ready for ping - use the corrected repository method
-            List<Monitor> monitors = monitorRepository.findMonitorsReadyForPingWithLock(now);
-
-            if (monitors.isEmpty()) {
-                log.info("No monitors ready for ping");
-                return;
-            }
-
-            log.info("Processing {} monitors for ping: [{}]", monitors.size(),
-                    monitors.stream().map(a -> a.getId().toString()).collect(Collectors.joining(",")));
-
-            // Submit all ping tasks concurrently
-            List<CompletableFuture<Void>> futures = monitors.stream()
-                    .map(this::submitPingTask)
-                    .toList();
-
-            // Wait for all tasks to complete
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                    .orTimeout(30, TimeUnit.SECONDS) // Prevent hanging
-                    .join();
-
-            log.info("Completed processing {} monitors in ping cycle. Active tasks: {}",
-                    monitors.size(), activeTasks.get());
-
-        } catch (Exception e) {
-            log.error("Error in ping cycle execution", e);
-        }
-    }
-
-    private CompletableFuture<Void> submitPingTask(Monitor monitor) {
-        activeTasks.incrementAndGet();
-
-        return CompletableFuture.runAsync(() -> {
-            try {
-                pingExecutorService.executePingForMonitor(monitor);
-            } catch (Exception e) {
-                log.error("Error executing ping for monitor {}: {}", monitor.getId(), e.getMessage());
-            } finally {
-                activeTasks.decrementAndGet();
-            }
-        }, executorService);
-    }
-
-    @PreDestroy
-    public void shutdown() {
-        log.info("Shutting down ping scheduler...");
-
-        if (executorService != null) {
-            executorService.shutdown();
-            try {
-                if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
-                    log.warn("Executor did not terminate gracefully, forcing shutdown");
-                    executorService.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                executorService.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-        }
-
-        log.info("Ping scheduler shutdown complete");
-    }
-
-    public int getActiveTasks() {
-        return activeTasks.get();
-    }
+//    @Scheduled(fixedDelay = 5000) // Run every 5 seconds
+//    public void executePingCycle() {
+//        log.info("Start new Ping Cycle");
+//        try {
+//            Instant now = Instant.now();
+//
+//            // Find monitors ready for ping - use the corrected repository method
+//            List<Monitor> monitors = monitorRepository.findMonitorsReadyForPingWithLock(now);
+//
+//            if (monitors.isEmpty()) {
+//                log.info("No monitors ready for ping");
+//                return;
+//            }
+//
+//            log.info("Processing {} monitors for ping: [{}]", monitors.size(),
+//                    monitors.stream().map(a -> a.getId().toString()).collect(Collectors.joining(",")));
+//
+//            // Submit all ping tasks concurrently
+//            List<CompletableFuture<Void>> futures = monitors.stream()
+//                    .map(this::submitPingTask)
+//                    .toList();
+//
+//            // Wait for all tasks to complete
+//            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+//                    .orTimeout(30, TimeUnit.SECONDS) // Prevent hanging
+//                    .join();
+//
+//            log.info("Completed processing {} monitors in ping cycle. Active tasks: {}",
+//                    monitors.size(), activeTasks.get());
+//
+//        } catch (Exception e) {
+//            log.error("Error in ping cycle execution", e);
+//        }
+//    }
+//
+//    private CompletableFuture<Void> submitPingTask(Monitor monitor) {
+//        activeTasks.incrementAndGet();
+//
+//        return CompletableFuture.runAsync(() -> {
+//            try {
+//                pingExecutorService.executePingForMonitor(monitor);
+//            } catch (Exception e) {
+//                log.error("Error executing ping for monitor {}: {}", monitor.getId(), e.getMessage());
+//            } finally {
+//                activeTasks.decrementAndGet();
+//            }
+//        }, executorService);
+//    }
+//
+//    @PreDestroy
+//    public void shutdown() {
+//        log.info("Shutting down ping scheduler...");
+//
+//        if (executorService != null) {
+//            executorService.shutdown();
+//            try {
+//                if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+//                    log.warn("Executor did not terminate gracefully, forcing shutdown");
+//                    executorService.shutdownNow();
+//                }
+//            } catch (InterruptedException e) {
+//                executorService.shutdownNow();
+//                Thread.currentThread().interrupt();
+//            }
+//        }
+//
+//        log.info("Ping scheduler shutdown complete");
+//    }
+//
+//    public int getActiveTasks() {
+//        return activeTasks.get();
+//    }
 }

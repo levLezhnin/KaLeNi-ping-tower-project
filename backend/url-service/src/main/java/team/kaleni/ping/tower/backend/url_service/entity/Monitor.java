@@ -19,8 +19,7 @@ import java.util.Map;
         indexes = {
                 @Index(name = "idx_monitor_owner", columnList = "owner_id"),
                 @Index(name = "idx_monitor_group_id", columnList = "group_id"),
-                @Index(name = "idx_monitor_next_ping", columnList = "next_ping_at"),
-                @Index(name = "idx_monitor_url", columnList = "url") // For quick URL lookups
+                @Index(name = "idx_monitor_enabled", columnList = "enabled")
         })
 @Data
 @NoArgsConstructor
@@ -38,7 +37,7 @@ public class Monitor {
     @Column(length = 1000)
     private String description;
 
-    // === HTTP Request Configuration ===
+    // === HTTP Configuration ===
     @Column(nullable = false, length = 2048)
     private String url;
 
@@ -49,14 +48,13 @@ public class Monitor {
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(columnDefinition = "jsonb")
-    private Map<String, String> headers; // Custom headers
+    private Map<String, String> headers;
 
-    @Column(length = 4000) // For request body
+    @Column(length = 4000)
     private String requestBody;
 
     @Column(length = 100)
-    @Builder.Default
-    private String contentType = "application/json"; // Content-Type for POST requests
+    private String contentType;
 
     // === Monitoring Configuration ===
     @Column(nullable = false)
@@ -70,22 +68,6 @@ public class Monitor {
     @Column(nullable = false)
     @Builder.Default
     private Boolean enabled = true;
-
-    // === Current Status (cached) ===
-    @Enumerated(EnumType.STRING)
-    @Builder.Default
-    private PingStatus lastStatus = PingStatus.UNKNOWN;
-
-    private Instant lastCheckedAt;
-    private Integer lastResponseTimeMs;
-    private Integer lastResponseCode;
-
-    @Column(length = 2000)
-    private String lastErrorMessage;
-
-    // === Scheduling ===
-    @Column(name = "next_ping_at")
-    private Instant nextPingAt;
 
     // === Metadata ===
     @CreationTimestamp
@@ -101,23 +83,5 @@ public class Monitor {
     @JoinColumn(name = "group_id")
     private MonitorGroup group;
 
-    // === Utility Methods ===
-
-    /**
-     * Generates unique signature for caching (30-second rule)
-     * Same URL+Method+Headers = same cache key
-     */
-    public String getCacheKey() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(method.name()).append(":").append(url);
-        if (headers != null && !headers.isEmpty()) {
-            headers.entrySet().stream()
-                    .sorted(Map.Entry.comparingByKey())
-                    .forEach(e -> sb.append("|").append(e.getKey()).append("=").append(e.getValue()));
-        }
-        if (requestBody != null && !requestBody.trim().isEmpty()) {
-            sb.append("|BODY:").append(requestBody.hashCode());
-        }
-        return sb.toString();
-    }
 }
+
