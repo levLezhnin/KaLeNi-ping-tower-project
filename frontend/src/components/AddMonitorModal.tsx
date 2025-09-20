@@ -60,12 +60,18 @@ export default function AddMonitorModal({ open, onClose, onCreated }: { open: bo
             intervalSeconds: totalInterval,
             timeoutMs: Math.max(3000, timeout),
         };
-        const res = await create(payload as any);
-        if (!res) {
-            setError("Не удалось создать монитор");
-        } else {
-            resetForm();
-            onCreated();
+        try {
+            const res = await create(payload as any);
+            if (res) {
+                resetForm();
+                onCreated();
+            } else {
+                setError("Не удалось создать монитор");
+            }
+        } catch (e: any) {
+            // Обрабатываем ошибки с бэкенда
+            const errorMessage = e?.message || "Не удалось создать монитор";
+            setError(errorMessage);
         }
     };
 
@@ -91,11 +97,14 @@ export default function AddMonitorModal({ open, onClose, onCreated }: { open: bo
                 <form className="p-6 space-y-6" onSubmit={handleSubmit}>
                     {error && (
                         <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                            <div className="flex items-center gap-2">
-                                <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex items-start gap-3">
+                                <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
-                                <span className="text-red-700 dark:text-red-400 text-sm font-medium">{error}</span>
+                                <div className="flex-1">
+                                    <h4 className="text-red-800 dark:text-red-300 text-sm font-medium mb-1">Ошибка создания монитора</h4>
+                                    <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+                                </div>
                             </div>
                         </div>
                     )}
