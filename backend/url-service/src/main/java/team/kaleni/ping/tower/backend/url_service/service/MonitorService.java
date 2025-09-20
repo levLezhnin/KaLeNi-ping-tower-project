@@ -30,6 +30,7 @@ public class MonitorService {
     private final MonitorGroupRepository monitorGroupRepository;
     private final EnhancedPingService pingService;
     private final MonitorStatusService monitorStatusService;
+    private final MonitorConfigService monitorConfigService;
 
     @Transactional
     public MonitorResponse createMonitor(Integer ownerId, CreateMonitorRequest req) {
@@ -83,11 +84,14 @@ public class MonitorService {
             Monitor saved = monitorRepository.save(monitor);
             log.info("Monitor {} created successfully in PostgreSQL for owner {}", saved.getId(), ownerId);
 
-            // 6) Initialize in Redis
+            // 6) Save config to Redis for Ping Service
+            monitorConfigService.saveMonitorConfig(saved);
+
+            // 7) Initialize status in Redis
             monitorStatusService.initializeStatus(saved.getId());
 
-            // 7) Add to ping queue (first ping in 30 seconds)
-            Instant firstPing = Instant.now().plusSeconds(30);
+            // 8) Add to ping queue (first ping in immediately )
+            Instant firstPing = Instant.now();
             monitorStatusService.addToPingQueue(saved.getId(), firstPing);
 
             log.info("Monitor {} initialized in Redis with first ping at {}", saved.getId(), firstPing);
@@ -238,6 +242,9 @@ public class MonitorService {
         // Save to PostgreSQL
         Monitor savedMonitor = monitorRepository.save(existingMonitor);
 
+        // Update config in Redis for Ping Service
+        monitorConfigService.updateMonitorConfig(savedMonitor);
+
         // Update ping schedule if interval changed and monitor is enabled
         if (intervalChanged && savedMonitor.getEnabled()) {
             // Remove old schedule and add new one
@@ -264,9 +271,11 @@ public class MonitorService {
         // Delete from PostgreSQL
         monitorRepository.delete(monitor);
 
-        // Remove from Redis
+        // Remove config from Redis
+        monitorConfigService.deleteMonitorConfig(monitorId);
+
+        // Remove from Redis ping queue
         monitorStatusService.removeFromPingQueue(monitorId);
-        // Status will expire naturally (7 days TTL)
 
         log.info("Monitor {} deleted from both PostgreSQL and Redis for owner {}", monitorId, ownerId);
 
@@ -286,7 +295,9 @@ public class MonitorService {
                 .orElseThrow(() -> new IllegalArgumentException("Monitor not found or not owned by user"));
 
         monitor.setEnabled(enabled);
-        monitorRepository.save(monitor);
+        Monitor saved = monitorRepository.save(monitor);
+        // Update config in Redis
+        monitorConfigService.updateMonitorConfig(saved);
 
         if (enabled) {
             // Add to ping queue

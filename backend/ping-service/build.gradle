@@ -1,0 +1,56 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.5.6'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'team.kaleni.ping.tower.backen'
+version = '0.0.1-SNAPSHOT'
+description = 'Ping service for Hackaton in NN'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(21)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	// Spring Boot Core
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+
+	// 🔥 Redis support
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	// HTTP Client
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+	// JSON processing
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+	// Logging
+	implementation 'org.springframework.boot:spring-boot-starter-logging'
+
+	// Lombok
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+
+	// Validation
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// Actuator для health checks
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// Test dependencies
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
