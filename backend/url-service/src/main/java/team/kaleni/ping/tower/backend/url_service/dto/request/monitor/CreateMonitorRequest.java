@@ -1,5 +1,9 @@
 package team.kaleni.ping.tower.backend.url_service.dto.request.monitor;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.Data;
@@ -31,9 +35,9 @@ public class CreateMonitorRequest {
     @Schema(description = "Custom HTTP headers")
     private Map<String, String> headers;
 
-    @Size(max = 4000, message = "Request body must be at most 4000 characters")
     @Schema(description = "Request body for POST requests", example = "{\"ping\": \"test\"}")
-    private String requestBody;
+    @JsonProperty("requestBody")
+    private Object requestBodyRaw;
 
     @Size(max = 100)
     @Schema(description = "Content-Type header", example = "application/json")
@@ -52,6 +56,29 @@ public class CreateMonitorRequest {
 
     @Schema(description = "Group ID", example = "123")
     private Long groupId;
+
+    @JsonIgnore
+    public String getRequestBodyAsString() {
+        if (requestBodyRaw == null) {
+            return null;
+        }
+
+        if (requestBodyRaw instanceof String) {
+            return (String) requestBodyRaw;
+        }
+
+        // Если это объект, сериализуем в JSON
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writeValueAsString(requestBodyRaw);
+        } catch (JsonProcessingException e) {
+            throw new IllegalArgumentException("Invalid requestBody format", e);
+        }
+    }
+
+    public void setRequestBodyFromString(String requestBody) {
+        this.requestBodyRaw = requestBody;
+    }
 }
 
 

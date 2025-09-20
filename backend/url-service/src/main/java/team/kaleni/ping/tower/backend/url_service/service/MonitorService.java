@@ -56,7 +56,7 @@ public class MonitorService {
                     .url(req.getUrl())
                     .method(method)
                     .headers(req.getHeaders())
-                    .requestBody(req.getRequestBody())
+                    .requestBody(req.getRequestBodyAsString())
                     .contentType(req.getContentType())
                     .intervalSeconds(req.getIntervalSeconds())
                     .timeoutMs(req.getTimeoutMs() != null ? req.getTimeoutMs() : 10000)
