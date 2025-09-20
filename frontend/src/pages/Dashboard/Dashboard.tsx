@@ -115,11 +115,19 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-sm mt-2 md:mt-0">
-                  {m.enabled ? (
-                    <button onClick={() => disable(m.id)} className="px-2 py-1 border border-[hsl(var(--border))] rounded">Отключить</button>
-                  ) : (
-                    <button onClick={() => enable(m.id)} className="px-2 py-1 border border-[hsl(var(--border))] rounded">Включить</button>
-                  )}
+                  <label className="flex items-center cursor-pointer select-none gap-2">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={!!m.enabled}
+                        onChange={() => m.enabled ? disable(m.id) : enable(m.id)}
+                        className="peer sr-only"
+                      />
+                      <div className="w-16 h-8 rounded-full transition bg-gray-300 peer-checked:bg-green-500 flex items-center px-1 box-border">
+                        <span className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow transition-all duration-200 ${m.enabled ? 'translate-x-8' : 'translate-x-0'}`}></span>
+                      </div>
+                    </div>
+                  </label>
                   <button onClick={() => remove(m.id)} className="px-2 py-1 border border-[hsl(var(--border))] rounded text-[hsl(var(--destructive))]">Удалить</button>
                 </div>
               </div>

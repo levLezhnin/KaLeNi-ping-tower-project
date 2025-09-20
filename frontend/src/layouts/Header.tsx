@@ -40,7 +40,20 @@ export default function Header() {
           <div className="flex items-center space-x-3">
             {authService.isAuthenticated() ? (
               <>
-                <span className="text-gray-600 hidden sm:inline">{authService.getEmail()}</span>
+                {(authService.getUsername() || authService.getEmail()) && (
+                  <div className="flex flex-col items-end mr-2">
+                    {authService.getUsername() && (
+                      <span className="font-semibold text-base text-gray-900 leading-tight">
+                        {authService.getUsername()}
+                      </span>
+                    )}
+                    {authService.getEmail() && (
+                      <span className="text-xs text-gray-500 leading-tight">
+                        {authService.getEmail()}
+                      </span>
+                    )}
+                  </div>
+                )}
                 <button
                   onClick={() => { authService.logout(); navigate("/"); }}
                   className="bg-gray-100 text-gray-900 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors"
