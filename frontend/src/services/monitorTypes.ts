@@ -40,10 +40,14 @@ export interface CreateMonitorRequest {
 
 export interface MonitorCreateResponse {
     result: boolean;
-    id?: number;
-    url?: string;
+    id?: number | null;
+    name?: string | null;
+    url?: string | null;
+    method?: string | null;
+    intervalSeconds?: number | null;
+    groupId?: number | null;
+    enabled?: boolean | null;
     newlyCreatedTarget?: boolean;
     targetId?: number;
-    groupId?: number;
-    enabled?: boolean;
+    errorMessage?: string;
 }

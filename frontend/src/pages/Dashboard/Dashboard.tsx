@@ -21,10 +21,25 @@ export default function Dashboard() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "up" | "down">("all");
   const [addModalOpen, setAddModalOpen] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchAll();
-  }, []);
+    const performFetch = async () => {
+      await fetchAll();
+      setLastUpdate(new Date());
+    };
+
+    performFetch();
+
+    // Устанавливаем интервал для автоматического обновления каждые 30 секунд
+    const interval = setInterval(() => {
+      performFetch();
+    }, 30000); // 30 секунд
+
+    // Очищаем интервал при размонтировании компонента
+    return () => clearInterval(interval);
+  }, [fetchAll]);
 
   const visible = useMemo(() => {
     let list = [...monitors];
@@ -42,8 +57,30 @@ export default function Dashboard() {
   return (
     <div className="max-w-7xl mx-auto p-6 text-[hsl(var(--foreground))]">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold">Мониторинг — URL-адреса</h2>
+        <div>
+          <h2 className="text-2xl font-semibold">Мониторинг — URL-адреса</h2>
+          {lastUpdate && (
+            <div className="flex items-center gap-2 mt-1">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                Обновлено: {lastUpdate.toLocaleTimeString()}
+              </span>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={async () => {
+              await fetchAll();
+              setLastUpdate(new Date());
+            }}
+            className="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
+            title="Обновить данные"
+          >
+            <svg className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
           <div className="relative">
             <input
               placeholder="Поиск по названию или URL..."
@@ -86,6 +123,28 @@ export default function Dashboard() {
           </button>
         </div>
       </div>
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1">
+              <h4 className="text-red-800 dark:text-red-300 text-sm font-medium mb-1">Ошибка операции</h4>
+              <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+            </div>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       <AddMonitorModal
         open={addModalOpen}
         onClose={() => setAddModalOpen(false)}
@@ -248,7 +307,18 @@ export default function Dashboard() {
                           <input
                             type="checkbox"
                             checked={!!m.enabled}
-                            onChange={() => m.enabled ? disable(m.id) : enable(m.id)}
+                            onChange={async () => {
+                              try {
+                                if (m.enabled) {
+                                  await disable(m.id);
+                                } else {
+                                  await enable(m.id);
+                                }
+                                setError(null);
+                              } catch (e: any) {
+                                setError(e?.message || "Не удалось изменить статус монитора");
+                              }
+                            }}
                             className="peer sr-only"
                           />
                           <div className="w-12 h-6 rounded-full transition bg-gray-300 peer-checked:bg-green-500 flex items-center px-1 box-border">
@@ -260,7 +330,14 @@ export default function Dashboard() {
                         </span>
                       </label>
                       <button
-                        onClick={() => remove(m.id)}
+                        onClick={async () => {
+                          try {
+                            await remove(m.id);
+                            setError(null);
+                          } catch (e: any) {
+                            setError(e?.message || "Не удалось удалить монитор");
+                          }
+                        }}
                         className="px-3 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                       >
                         Удалить

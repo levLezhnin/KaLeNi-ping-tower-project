@@ -12,13 +12,23 @@ export default function UrlDetails() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
+    const performRefresh = async () => {
       if (!id) return;
       setLoading(true);
       await refreshOne(Number(id));
       setItem(getById(Number(id)) ?? null);
       setLoading(false);
-    })();
+    };
+
+    performRefresh();
+
+    // Устанавливаем интервал для автоматического обновления каждые 30 секунд
+    const interval = setInterval(() => {
+      performRefresh();
+    }, 30000); // 30 секунд
+
+    // Очищаем интервал при размонтировании компонента
+    return () => clearInterval(interval);
   }, [id, getById, refreshOne]);
 
   const chartData = useMemo(() => {

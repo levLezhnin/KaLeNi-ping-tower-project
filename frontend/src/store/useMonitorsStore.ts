@@ -59,15 +59,22 @@ export const useMonitorsStore = create<State>((set, get) => ({
         try {
             set({ error: null });
             const res = await monitorService.create(payload);
-            if (res.id != null) {
+
+            // Проверяем, что результат успешный и есть ID
+            if (res.result && res.id != null) {
                 await get().refreshOne(res.id);
                 return get().getById(res.id);
             }
+
+            // Если result = false, но нет ошибки в catch, создаем общую ошибку
+            if (!res.result) {
+                throw new Error(res.errorMessage || "Не удалось создать монитор");
+            }
+
             return undefined;
         } catch (e: any) {
-            const msg = e?.message || "Не удалось создать монитор";
-            set({ error: msg });
-            return undefined;
+            // Передаем ошибку дальше, чтобы модалка могла её обработать
+            throw e;
         }
     },
 
@@ -97,7 +104,9 @@ export const useMonitorsStore = create<State>((set, get) => ({
             await monitorService.remove(id);
             set({ monitors: get().monitors.filter(m => m.id !== id) });
         } catch (e: any) {
-            set({ error: e?.message || "Не удалось удалить монитор" });
+            const msg = e?.message || "Не удалось удалить монитор";
+            set({ error: msg });
+            throw e; // Передаем ошибку дальше для обработки в компонентах
         }
     },
 
@@ -107,7 +116,9 @@ export const useMonitorsStore = create<State>((set, get) => ({
             await monitorService.enable(id);
             await get().refreshOne(id);
         } catch (e: any) {
-            set({ error: e?.message || "Не удалось включить монитор" });
+            const msg = e?.message || "Не удалось включить монитор";
+            set({ error: msg });
+            throw e; // Передаем ошибку дальше для обработки в компонентах
         }
     },
 
@@ -117,7 +128,9 @@ export const useMonitorsStore = create<State>((set, get) => ({
             await monitorService.disable(id);
             await get().refreshOne(id);
         } catch (e: any) {
-            set({ error: e?.message || "Не удалось отключить монитор" });
+            const msg = e?.message || "Не удалось отключить монитор";
+            set({ error: msg });
+            throw e; // Передаем ошибку дальше для обработки в компонентах
         }
     },
 }));
