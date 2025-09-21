@@ -88,6 +88,18 @@ public class UserService {
         }
     }
 
+    public boolean isUserSubscribed(Long id) {
+
+        Optional<User> optUser = userRepository.findById(id);
+
+        if (optUser.isEmpty()) {
+            throw new EntityNotFoundException("Пользователь с id: " + id + " не найден.");
+        }
+
+        User user = optUser.get();
+        return user.getTelegramChatId() != null;
+    }
+
     public boolean signIn(UserCredentialsDto userCredentialsDto) {
 
         // проверяем есть ли пользователь с таким email-ом

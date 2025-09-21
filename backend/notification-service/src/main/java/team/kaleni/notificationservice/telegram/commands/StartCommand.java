@@ -42,7 +42,7 @@ public class StartCommand implements Command {
                 telegramService.subscribeUserByUUID(uuid, chatId);
                 resultTextMessage = TelegramBotResponses.MSG_SUBSCRIBE_OK;
 
-            } catch (IllegalArgumentException | RestClientException e) {
+            } catch (Exception e) {
                 log.error("Something went wrong");
                 e.printStackTrace();
                 resultTextMessage = TelegramBotResponses.MSG_SUBSCRIBE_FAILED;

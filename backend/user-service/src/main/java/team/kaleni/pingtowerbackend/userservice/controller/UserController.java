@@ -65,6 +65,11 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    @GetMapping("/isSubscribed/{userId}")
+    public boolean isUserSubscribed(@PathVariable Long userId) {
+        return userService.isUserSubscribed(userId);
+    }
+
     @Operation(
             summary = """
                     Ищет пользователя по id.

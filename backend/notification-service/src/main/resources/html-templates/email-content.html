@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 
 <head>
     <meta charset="UTF-8">
@@ -7,27 +7,35 @@
     <title>Ping Tower Notification</title>
 </head>
 
-<body style="font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px;">
-
-<div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);">
-
-    <!-- Logo -->
-    <div style="text-align: center;">
-        <img src="cid:logo.png" width="100" height="100" alt="Здесь мог быть ваш логотип" style="max-width: 150px; height: auto;">
+<body style="margin:0; padding:0; background: #f8fafc; min-height:100vh; font-family: 'Segoe UI', Arial, sans-serif;">
+    <div
+        style="max-width: 600px; margin: 40px auto; background: #fff; border-radius: 18px; box-shadow: 0 6px 32px 0 rgba(99,102,241,0.10), 0 1.5px 6px 0 rgba(49,46,129,0.08); overflow: hidden;">
+        <!-- Header / Logo -->
+        <div
+            style="background: linear-gradient(90deg, #6366f1 0%, #312e81 100%); padding: 32px 0 16px 0; text-align: center;">
+            <img src="cid:logo.png" width="80" height="80" alt="Monitor Pro Logo"
+                style="border-radius: 16px; box-shadow: 0 2px 8px rgba(99,102,241,0.10); background: #fff; padding: 8px; max-width: 100px; height: auto;">
+        </div>
+        <!-- Main Content -->
+        <div style="padding: 32px 32px 24px 32px;">
+            <h1 style="margin: 0 0 12px 0; color: #312e81; font-size: 2rem; font-weight: 700; letter-spacing: -1px;">
+                Уведомление от Monitor Pro</h1>
+            <p style="color: #6366f1; font-size: 1.1rem; margin: 0 0 16px 0; font-weight: 500;">Дорогой пользователь,
+            </p>
+            <p style="color: #222; font-size: 1rem; margin: 0 0 24px 0;">Команда проекта <b style="color:#312e81">Monitor Pro</b> хочет передать вам следующее сообщение:</p>
+            <div
+                style="background: #f3f4f6; border-radius: 12px; padding: 18px 20px; color: #312e81; font-size: 1.15rem; font-weight: 600; text-align: center; margin-bottom: 24px; border: 1px solid #e0e7ff;">
+                "%s"
+            </div>
+        </div>
+        <!-- Footer -->
+        <div
+            style="background: #f8fafc; border-top: 1px solid #e0e7ff; padding: 18px 32px; text-align: center; color: #6b7280; font-size: 0.95rem; border-radius: 0 0 18px 18px;">
+            <p style="margin: 0 0 6px 0;">Вы получили это сообщение, так как подписаны на рассылку от сервиса <b
+                    style="color:#6366f1">Monitor Pro</b>.</p>
+            <p style="margin: 0; font-size: 0.85rem; color: #a1a1aa;">&copy; 2025 KaLeNi Team</p>
+        </div>
     </div>
-
-    <!-- Email Content -->
-    <h1 style="color: #333333;">Уведомление от сервиса Ping Tower</h1>
-    <p style="color: #555555;">Дорогой пользователь,</p>
-    <p style="color: #555555;">Команда KaLeNi проекта Ping Tower, хочет передать вам сердечное: "%s"</p>
-
-    <!-- Footer -->
-    <div style="text-align: center; color: #777777; font-size: 12px; margin-top: 30px;">
-        <p>Вы получили это сообщение, так как подписаны на рассылку от сервиса Ping Tower.</p>
-    </div>
-
-</div>
-
 </body>
 
 </html>
