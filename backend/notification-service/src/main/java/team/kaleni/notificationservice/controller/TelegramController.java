@@ -2,10 +2,7 @@ package team.kaleni.notificationservice.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import team.kaleni.notificationservice.service.QrCodeService;
 import team.kaleni.notificationservice.service.TelegramService;
 
@@ -25,8 +22,8 @@ public class TelegramController {
                     Возвращает строку в plaintext - ссылку для привязки уведомлений в Telegram.
                     """
     )
-    @GetMapping("/getSubscribeLink")
-    public String getNotificationSubscriptionLink(@RequestBody Long userId) {
+    @GetMapping("/getSubscribeLink/{userId}")
+    public String getNotificationSubscriptionLink(@PathVariable Long userId) {
         return telegramService.generateSubscriptionLink(userId);
     }
 
@@ -38,8 +35,8 @@ public class TelegramController {
                     Возвращает массив байт - данные о QR-коде. Его остаётся только визуально отобразить.
                     """
     )
-    @GetMapping("/getSubscribeQrCode")
-    public byte[] getNotificationSubscriptionQrCode(@RequestBody Long userId) {
+    @GetMapping("/getSubscribeQrCode/{userId}")
+    public byte[] getNotificationSubscriptionQrCode(@PathVariable Long userId) {
         return qrCodeService.generateQrCode(telegramService.generateSubscriptionLink(userId));
     }
 }
