@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { authService } from "../../services/authService";
 import api from "../../services/apiClient";
+import TelegramBotModal from "../../components/TelegramBotModal";
+import { telegramService } from "../../services/telegramService";
 
 export default function Profile() {
     const [username, setUsername] = useState(authService.getUsername() || "");
@@ -9,6 +11,11 @@ export default function Profile() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
+    const [telegramModalOpen, setTelegramModalOpen] = useState(false);
+    const [telegramMode, setTelegramMode] = useState<'connect' | 'disconnect'>('connect');
+    const [telegramLink, setTelegramLink] = useState("");
+    const [telegramQr, setTelegramQr] = useState("");
+    const isSubscribed = !!localStorage.getItem("telegram_subscribed");
 
     const userId = authService.getOwnerId();
     const email = authService.getEmail();
@@ -61,6 +68,18 @@ export default function Profile() {
         }
     };
 
+    const openTelegramModal = async (mode: 'connect' | 'disconnect') => {
+        setTelegramMode(mode);
+        setTelegramModalOpen(true);
+        const userId = authService.getOwnerId();
+        const [link, qr] = await Promise.all([
+            telegramService.getSubscribeLink(userId),
+            telegramService.getSubscribeQrCode(userId),
+        ]);
+        setTelegramLink(link);
+        setTelegramQr(qr);
+    };
+
     return (
         <div className="max-w-2xl mx-auto p-6">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -91,6 +110,14 @@ export default function Profile() {
                                 <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Email</span>
                                 <div className="text-gray-900 dark:text-white font-mono">{email}</div>
                             </div>
+                        </div>
+                        <div className="mt-4">
+                            <button
+                                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${isSubscribed ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                                onClick={() => openTelegramModal(isSubscribed ? 'disconnect' : 'connect')}
+                            >
+                                {isSubscribed ? 'Отключить уведомления' : 'Подключить уведомления'}
+                            </button>
                         </div>
                     </div>
 
@@ -223,6 +250,14 @@ export default function Profile() {
                             </button>
                         </div>
                     </form>
+                    <TelegramBotModal
+                        open={telegramModalOpen}
+                        onClose={() => setTelegramModalOpen(false)}
+                        mode={telegramMode}
+                        link={telegramLink}
+                        qrCode={telegramQr}
+                        onUsed={telegramMode === 'connect' ? () => localStorage.setItem("telegram_subscribed", "1") : undefined}
+                    />
                 </div>
             </div>
         </div>

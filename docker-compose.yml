@@ -159,6 +159,27 @@ services:
       - ping_app_network
     restart: unless-stopped
 
+  # Statistics Service
+  statistics_service:
+    build:
+      context: ./backend/statistics-service
+      dockerfile: Dockerfile
+    container_name: statistics-service
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_DATABASE: ${CLICKHOUSE_DB_NAME:-ping_history}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
+      SERVER_PORT: ${STATISTICS_SERVICE_DOCKER_PORT}
+    ports:
+      - "${STATISTICS_SERVICE_PORT}:${STATISTICS_SERVICE_DOCKER_PORT}"
+    depends_on:
+      - clickhouse
+    networks:
+      - ping_app_network
+    restart: unless-stopped
+
   # User Service приложение
   user_service:
     build:
@@ -197,6 +218,7 @@ services:
       NOTIFICATION_SERVICE_TELEGRAM_UNSUBSCRIBE_PATH: ${NOTIFICATION_SERVICE_TELEGRAM_UNSUBSCRIBE_PATH}
     networks:
       - kafka-network
+      - ping_app_network
     restart: unless-stopped
 
   # Frontend приложение
