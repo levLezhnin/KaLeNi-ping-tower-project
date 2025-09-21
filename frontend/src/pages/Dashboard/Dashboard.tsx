@@ -3,6 +3,9 @@ import { Link } from "react-router-dom";
 import { useMonitorsStore } from "../../store/useMonitorsStore";
 import type { MonitorDetailResponse } from "../../services/monitorTypes";
 import AddMonitorModal from "../../components/AddMonitorModal";
+import TelegramBotModal from "../../components/TelegramBotModal";
+import { telegramService } from "../../services/telegramService";
+import { authService } from "../../services/authService";
 
 function StatusDot({ status }: { status: MonitorDetailResponse["currentStatus"] }) {
   const cls =
@@ -23,6 +26,9 @@ export default function Dashboard() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [telegramModalOpen, setTelegramModalOpen] = useState(false);
+  const [telegramLink, setTelegramLink] = useState("");
+  const [telegramQr, setTelegramQr] = useState("");
 
   useEffect(() => {
     const performFetch = async () => {
@@ -39,6 +45,22 @@ export default function Dashboard() {
 
     // Очищаем интервал при размонтировании компонента
     return () => clearInterval(interval);
+  }, [fetchAll]);
+
+  useEffect(() => {
+    // Показываем Telegram-модалку если только что зарегистрировались
+    if (localStorage.getItem("show_telegram_modal") === "1" && !localStorage.getItem("telegram_subscribed")) {
+      setTelegramModalOpen(true);
+      const userId = authService.getOwnerId();
+      Promise.all([
+        telegramService.getSubscribeLink(userId),
+        telegramService.getSubscribeQrCode(userId),
+      ]).then(([link, qr]) => {
+        setTelegramLink(link);
+        setTelegramQr(qr);
+      });
+      localStorage.removeItem("show_telegram_modal");
+    }
   }, [fetchAll]);
 
   const visible = useMemo(() => {
@@ -152,6 +174,14 @@ export default function Dashboard() {
           setAddModalOpen(false);
           fetchAll();
         }}
+      />
+      <TelegramBotModal
+        open={telegramModalOpen}
+        onClose={() => setTelegramModalOpen(false)}
+        mode="connect"
+        link={telegramLink}
+        qrCode={telegramQr}
+        onUsed={() => localStorage.setItem("telegram_subscribed", "1")}
       />
       <div className="w-full bg-[hsl(var(--card))] p-4 rounded shadow mb-8">
         <h4 className="font-medium mb-3">Мониторы</h4>
