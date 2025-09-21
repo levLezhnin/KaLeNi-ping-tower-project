@@ -5,21 +5,34 @@ export interface MonitorDetailResponse {
     name: string;
     description?: string;
     url: string;
-    targetId: number;
+    method: string;
+    headers?: Record<string, string>;
+    requestBody?: any;
+    contentType?: string;
     intervalSeconds: number;
     timeoutMs?: number;
     enabled?: boolean;
     currentStatus?: PingStatus;
     lastCheckedAt?: string;
+    lastResponseTimeMs?: number;
+    lastResponseCode?: number;
+    lastErrorMessage?: string;
     groupId?: number;
+    groupName?: string;
     createdAt?: string;
     updatedAt?: string;
+    nextPingAt?: string;
+    targetId?: number;
 }
 
 export interface CreateMonitorRequest {
     name: string;
     description?: string;
     url: string;
+    method: string;
+    headers?: Record<string, string>;
+    requestBody?: any;
+    contentType?: string;
     intervalSeconds: number;
     timeoutMs?: number;
     groupId?: number;
@@ -27,10 +40,14 @@ export interface CreateMonitorRequest {
 
 export interface MonitorCreateResponse {
     result: boolean;
-    id?: number;
-    url?: string;
+    id?: number | null;
+    name?: string | null;
+    url?: string | null;
+    method?: string | null;
+    intervalSeconds?: number | null;
+    groupId?: number | null;
+    enabled?: boolean | null;
     newlyCreatedTarget?: boolean;
     targetId?: number;
-    groupId?: number;
-    enabled?: boolean;
+    errorMessage?: string;
 }

@@ -26,7 +26,7 @@ services:
     networks:
       - ping_app_network
     restart: unless-stopped
-
+  
   # Kafka для Notification Service и Ping Service
   kafka:
     image: bitnami/kafka:latest
@@ -63,6 +63,48 @@ services:
       - kafka
     networks:
       - kafka-network
+  
+  # Redis для кэширования и очередей
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    command: redis-server --appendonly yes --replica-read-only no
+    volumes:
+      - redis_data:/data
+    networks:
+      - ping_app_network
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+  
+  # 🔥 ClickHouse для ping истории
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.1
+    container_name: clickhouse
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB_NAME:-ping_history}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      - "${CLICKHOUSE_PORT:-8123}:8123"
+      - "${CLICKHOUSE_TCP_PORT:-9000}:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./clickhouse/init:/docker-entrypoint-initdb.d
+    networks:
+      - ping_app_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:8123/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   # URL Service приложение
   url_service:
@@ -75,10 +117,44 @@ services:
       SPRING_DATASOURCE_USERNAME: ${URL_SERVICE_DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${URL_SERVICE_DB_PASSWORD}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+      # Redis configuration
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASE: ${REDIS_DATABASE}
     ports:
       - "${URL_SERVICE_PORT}:8080"
     depends_on:
       - url_service_db
+      - redis
+    networks:
+      - ping_app_network
+    restart: unless-stopped
+  
+  # НОВЫЙ Ping Service
+  ping_service:
+    build:
+      context: ./backend/ping-service
+      dockerfile: Dockerfile
+    container_name: ping-service
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-docker}
+      # Redis configuration
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      REDIS_DATABASE: ${REDIS_DATABASE}
+      # ClickHouse configuration
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_DATABASE: ${CLICKHOUSE_DB_NAME:-ping_history}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-}
+      # Ping service configuration
+      PING_SCHEDULER_INTERVAL: ${PING_SCHEDULER_INTERVAL:-5000}
+      PING_THREAD_POOL_SIZE: ${PING_THREAD_POOL_SIZE:-10}
+      PING_BATCH_SIZE: ${PING_BATCH_SIZE:-50}
+    depends_on:
+      - redis
     networks:
       - ping_app_network
     restart: unless-stopped
@@ -142,6 +218,10 @@ volumes:
     name: user_postgres_data
   kafka_data:
     name: kafka_data
+  redis_data:
+    name: redis_data
+  clickhouse_data:  # 🔥 НОВЫЙ volume для ClickHouse
+    name: clickhouse_data
 
 networks:
   ping_app_network:
