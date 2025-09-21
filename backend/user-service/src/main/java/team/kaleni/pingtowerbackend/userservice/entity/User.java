@@ -25,4 +25,7 @@ public class User {
 
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
+
+    @Column(name = "telegram_chat_id")
+    private Long telegramChatId;
 }

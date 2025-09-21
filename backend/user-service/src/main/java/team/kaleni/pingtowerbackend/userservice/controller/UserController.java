@@ -2,7 +2,9 @@ package team.kaleni.pingtowerbackend.userservice.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import team.kaleni.pingtowerbackend.userservice.dto.request.UserUpdateDtoRequest;
 import team.kaleni.pingtowerbackend.userservice.dto.response.UserDtoResponse;
@@ -33,6 +35,39 @@ public class UserController {
     public UserDtoResponse update(@PathVariable Long userId,
                                   @RequestBody @Valid UserUpdateDtoRequest userUpdateDtoRequest) {
         return userService.update(userId, userUpdateDtoRequest);
+    }
+
+    @Operation(
+            summary = """
+                    Подписать пользователя на уведомления в Telegram (ТОЛЬКО ДЛЯ БЭКЕНДА)
+                    """,
+            description = """
+                    Принимает в себя userId - id пользователя, которого мы привязываем, charId - id telegram-чата, который закрепляется за user-ом.
+                    """
+    )
+    @PutMapping("/subscribe/{userId}")
+    public ResponseEntity<?> subscribeUser(@PathVariable Long userId, @RequestBody @NotNull Long chatId) {
+        userService.updateTelegramInfo(userId, chatId);
+        return ResponseEntity.ok().build();
+    }
+
+    @Operation(
+            summary = """
+                    Отписать пользователя от уведомлений в Telegram (ТОЛЬКО ДЛЯ БЭКЕНДА)
+                    """,
+            description = """
+                    Принимает в себя charId - id telegram-чата, для которого мы отвязываем user-а.
+                    """
+    )
+    @PutMapping("/unsubscribe/{chatId}")
+    public ResponseEntity<?> unsubscribeUser(@PathVariable @NotNull Long chatId) {
+        userService.unsubscribeUserByChatId(chatId);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/isSubscribed/{userId}")
+    public boolean isUserSubscribed(@PathVariable Long userId) {
+        return userService.isUserSubscribed(userId);
     }
 
     @Operation(
