@@ -22,6 +22,10 @@ export const authService = {
         return localStorage.getItem(OWNER_KEY) || getDefaultOwnerId();
     },
 
+    getToken(): string {
+        return localStorage.getItem('monitorpro_token') || '';
+    },
+
     getEmail(): string | null {
         return localStorage.getItem(EMAIL_KEY);
     },
@@ -75,6 +79,15 @@ export const authService = {
             throw new Error("Пользователь с таким email не найден");
         }
     },
+
+    async isTelegramSubscribed(userId: string | number): Promise<boolean> {
+        try {
+          const { data } = await apiAuth.get(`/api/v1/users/isSubscribed/${userId}`);
+          return !!data;
+        } catch {
+          return false;
+        }
+      },
 
     logout(): void {
         localStorage.removeItem(TOKEN_KEY);
