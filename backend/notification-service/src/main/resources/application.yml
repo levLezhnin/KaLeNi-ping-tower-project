@@ -20,7 +20,11 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     properties:
-      spring.json.trusted.packages: "*"
+      spring:
+        json:
+          trusted.packages: "*"
+          use.type.info.headers: false
+          value.default.type: team.kaleni.notificationservice.dto.NotificationDTO
     consumer:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
