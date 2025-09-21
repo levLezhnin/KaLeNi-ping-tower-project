@@ -157,6 +157,7 @@ services:
       - redis
     networks:
       - ping_app_network
+      - kafka-network
     restart: unless-stopped
 
   # Statistics Service

@@ -7,10 +7,16 @@ root/
 ├── docker-compose.yml          # Главный файл оркестрации
 ├── .env                       # Переменные окружения для всей системы
 ├── backend/
-│   ├── url_service/
+│   ├── url-service/
 │   │   └── Dockerfile         # Образ для URL сервиса
-│   └── user_service/
-│       └── Dockerfile         # Образ для User сервиса
+│   ├── user-service/
+│   │   └── Dockerfile         # Образ для User сервиса
+│   ├── ping-service/
+│   │   └── Dockerfile         # Образ для Ping сервиса
+│   ├── statistics-service/
+│   │   └── Dockerfile         # Образ для Statistics сервиса
+│   └── notification-service/
+│       └── Dockerfile         # Образ для Notification сервиса
 └── frontend/
     ├── Dockerfile             # Образ для Frontend
     └── vite.config.ts         # Конфигурация Vite с проксированием
@@ -59,6 +65,8 @@ docker-compose logs frontend
 - **Frontend**: http://localhost:5173
 - **URL Service API**: http://localhost:8080
 - **User Service API**: http://localhost:8081
+- **Notification Service API**: http://localhost:8083
+- **Statistics Service API**: http://localhost:8084
 
 ## Работа с отдельными контейнерами
 
@@ -127,48 +135,6 @@ docker volume rm url_postgres_data
 docker volume rm user_postgres_data
 ```
 
-## Полезные команды
-
-### Мониторинг системы
-```bash
-# Просмотр ресурсов контейнеров
-docker stats
-
-# Просмотр сетей
-docker network ls
-docker network inspect ping_app_network
-
-# Просмотр volumes
-docker volume ls
-```
-
-### Логи и отладка
-```bash
-# Следить за логами в реальном времени
-docker-compose logs -f
-
-# Логи конкретного сервиса за последние 100 строк
-docker-compose logs --tail=100 url_service
-
-# Логи с временными метками
-docker-compose logs -t frontend
-```
-
-### Очистка системы
-```bash
-# Остановить все сервисы
-docker-compose down
-
-# Остановить и удалить все volumes (УДАЛИТ ДАННЫЕ БД!)
-docker-compose down -v
-
-# Удалить неиспользуемые образы и контейнеры
-docker system prune
-
-# Полная очистка системы Docker (ОСТОРОЖНО!)
-docker system prune -a --volumes
-```
-
 ## Разработка и отладка
 
 ### Подключение к работающему контейнеру
@@ -235,4 +201,6 @@ docker-compose build url_service
 3. **Изменили docker-compose.yml** → `docker-compose down` → `docker-compose up -d`
 4. **Проблемы с БД** → Проверить логи → При необходимости пересоздать volume
 
-Система готова к разработке! Все сервисы взаимодействуют через внутреннюю Docker сеть `ping_app_network`.
+Система готова к разработке! 
+Все сервисы взаимодействуют через внутреннюю Docker сеть `ping_app_network`.
+Обмен сообщений по Kafka происходит через сеть `kafka-network`
