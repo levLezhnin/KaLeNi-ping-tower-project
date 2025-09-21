@@ -39,7 +39,7 @@ public class TelegramService {
     public void subscribeUserByUUID(UUID uuid, Long chatId) {
         Long userId = getUserIdByUUID(uuid);
         try {
-            restClient.callMicroservice(telegramServiceSubscribePath, userId, chatId);
+            restClient.callMicroservice(telegramServiceSubscribePath, userId, "");
             log.info("Пользователь успешно подписан на уведомления в Telegram!");
         } finally {
             userUUIDMapping.removeMapping(uuid);
@@ -47,7 +47,7 @@ public class TelegramService {
     }
 
     public void unsubscribeUserByChatId(Long chatId) {
-        restClient.callMicroservice(telegramServiceUnsubscribePath, chatId, null);
+        restClient.callMicroservice(telegramServiceUnsubscribePath, chatId, "");
         log.info("Пользователь успешно отписался от уведомлений в Telegram!");
     }
 }

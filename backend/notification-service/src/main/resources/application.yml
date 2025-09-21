@@ -4,6 +4,7 @@ server:
 spring:
   application:
     name: ping-tower-notification-service
+    get-user-path: ${NOTIFICATION_SERVICE_GET_USER_PATH}
     subscribe-path: ${NOTIFICATION_SERVICE_TELEGRAM_SUBSCRIBE_PATH}
     unsubscribe-path: ${NOTIFICATION_SERVICE_TELEGRAM_UNSUBSCRIBE_PATH}
   mail:

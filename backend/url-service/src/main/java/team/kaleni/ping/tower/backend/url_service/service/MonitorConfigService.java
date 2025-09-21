@@ -27,6 +27,7 @@ public class MonitorConfigService {
 
         Map<String, Object> config = new HashMap<>();
         config.put("monitorId", monitor.getId());
+        config.put("ownerId", monitor.getOwnerId());
         config.put("name", monitor.getName());
         config.put("url", monitor.getUrl());
         config.put("method", monitor.getMethod().name());

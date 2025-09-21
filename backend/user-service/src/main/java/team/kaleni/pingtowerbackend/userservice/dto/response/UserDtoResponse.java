@@ -11,4 +11,5 @@ public class UserDtoResponse {
     Long id;
     String username;
     String email;
+    Long telegramChatId;
 }
