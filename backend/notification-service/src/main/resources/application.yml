@@ -4,6 +4,7 @@ server:
 spring:
   application:
     name: ping-tower-notification-service
+    get-user-path: ${NOTIFICATION_SERVICE_GET_USER_PATH}
     subscribe-path: ${NOTIFICATION_SERVICE_TELEGRAM_SUBSCRIBE_PATH}
     unsubscribe-path: ${NOTIFICATION_SERVICE_TELEGRAM_UNSUBSCRIBE_PATH}
   mail:
@@ -20,7 +21,11 @@ spring:
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     properties:
-      spring.json.trusted.packages: "*"
+      spring:
+        json:
+          trusted.packages: "*"
+          use.type.info.headers: false
+          value.default.type: team.kaleni.notificationservice.dto.NotificationDTO
     consumer:
       auto-offset-reset: earliest
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer

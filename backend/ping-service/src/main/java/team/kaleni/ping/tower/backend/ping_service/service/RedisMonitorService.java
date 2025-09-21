@@ -189,6 +189,7 @@ public class RedisMonitorService {
     private MonitorConfigDto mapToMonitorConfig(Map<String, Object> map, Long monitorId) {
         return MonitorConfigDto.builder()
                 .monitorId(monitorId)
+                .ownerId(Long.valueOf(parseInteger(map.get("ownerId"), 228)))
                 .url(parseString(map.get("url")))
                 .method(parseHttpMethod(map.get("method")))
                 .name(parseString(map.get("name")))

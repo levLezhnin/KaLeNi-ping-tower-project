@@ -74,7 +74,8 @@ public class TelegramBotResponses {
             """ + TUTORIAL_UNSUBSCRIBE;
 
     public static final String MSG_NOTIFICATION_PATTERN = """
-            🔔 Вам пришло уведомление:
+            🔔 Monitor Pro Вам отправил уведомление:
+            
             %s
             """;
 }

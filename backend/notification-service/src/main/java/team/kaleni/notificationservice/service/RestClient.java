@@ -11,11 +11,11 @@ public class RestClient {
 
     private final RestTemplate restTemplate;
 
-    public ResponseEntity<String> callMicroservice(String path, Long userId, Long body) {
+    public ResponseEntity<String> callMicroservice(String path, Long userId, String body) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<Long> request = new HttpEntity<>(body, headers);
+        HttpEntity<String> request = new HttpEntity<>(body, headers);
 
         return restTemplate.exchange(
                 path,
