@@ -1,8 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useMonitorsStore } from "../../store/useMonitorsStore";
 import type { MonitorDetailResponse } from "../../services/monitorTypes";
-import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer } from "recharts";
+import { StatisticsService } from "../../services/statisticsService";
+import { StatisticsCard } from "../../components/StatisticsCard";
+import { StatisticsChart } from "../../components/StatisticsChart";
+import { TimeRangeSelector, type TimeRange } from "../../components/TimeRangeSelector";
+import type { HourlyStatistics, ChartDataPoint } from "../../types";
 
 export default function UrlDetails() {
   const { id } = useParams();
@@ -10,6 +14,187 @@ export default function UrlDetails() {
   const { getById, refreshOne, enable, disable, remove } = useMonitorsStore();
   const [item, setItem] = useState<MonitorDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Состояние для статистики
+  const [hourlyStatistics, setHourlyStatistics] = useState<HourlyStatistics[]>([]);
+  const [statisticsChartData, setStatisticsChartData] = useState<ChartDataPoint[]>([]);
+  const [statisticsLoading, setStatisticsLoading] = useState(false);
+  const [selectedTimeRange, setSelectedTimeRange] = useState<TimeRange>('24h');
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
+
+  // Ref для хранения предыдущих данных, чтобы избежать лишних обновлений
+  const prevDataRef = useRef<{
+    hourlyStats: HourlyStatistics[];
+    chartStats: ChartDataPoint[];
+  }>({ hourlyStats: [], chartStats: [] });
+
+  // Функция для загрузки статистики
+  const loadStatistics = useCallback(async (monitorId: number, timeRange: TimeRange) => {
+    if (!monitorId) return;
+
+    setStatisticsLoading(true);
+    try {
+      let hourlyStats: HourlyStatistics[] = [];
+      let chartStats: ChartDataPoint[] = [];
+
+      switch (timeRange) {
+        case '24h':
+          hourlyStats = await StatisticsService.getHourlyStatistics24h(monitorId);
+          chartStats = await StatisticsService.getChartData24h(monitorId);
+          break;
+        case '7d': {
+          const sevenDaysAgo = StatisticsService.get7DaysAgo();
+          const now = new Date();
+          hourlyStats = await StatisticsService.getHourlyStatistics(monitorId, {
+            startTime: StatisticsService.formatDateForAPI(sevenDaysAgo),
+            endTime: StatisticsService.formatDateForAPI(now),
+          });
+          chartStats = await StatisticsService.getChartData(monitorId, {
+            startTime: StatisticsService.formatDateForAPI(sevenDaysAgo),
+            endTime: StatisticsService.formatDateForAPI(now),
+          });
+          break;
+        }
+        case '30d': {
+          const thirtyDaysAgo = StatisticsService.get30DaysAgo();
+          const now30 = new Date();
+          hourlyStats = await StatisticsService.getHourlyStatistics(monitorId, {
+            startTime: StatisticsService.formatDateForAPI(thirtyDaysAgo),
+            endTime: StatisticsService.formatDateForAPI(now30),
+          });
+          chartStats = await StatisticsService.getChartData(monitorId, {
+            startTime: StatisticsService.formatDateForAPI(thirtyDaysAgo),
+            endTime: StatisticsService.formatDateForAPI(now30),
+          });
+          break;
+        }
+        case 'custom':
+          // Для произвольных дат используем отдельную функцию
+          break;
+      }
+
+      setHourlyStatistics(hourlyStats);
+      setStatisticsChartData(chartStats);
+
+      // Обновляем ref с новыми данными
+      prevDataRef.current = { hourlyStats, chartStats };
+    } catch (error) {
+      console.error('Ошибка загрузки статистики:', error);
+      setHourlyStatistics([]);
+      setStatisticsChartData([]);
+    } finally {
+      setStatisticsLoading(false);
+    }
+  }, [customStartDate, customEndDate]);
+
+  // Функция для тихого обновления статистики (без индикатора загрузки)
+  const loadStatisticsSilently = useCallback(async (monitorId: number, timeRange: TimeRange) => {
+    if (!monitorId) return;
+
+    try {
+      let hourlyStats: HourlyStatistics[] = [];
+      let chartStats: ChartDataPoint[] = [];
+
+      switch (timeRange) {
+        case '24h':
+          hourlyStats = await StatisticsService.getHourlyStatistics24h(monitorId);
+          chartStats = await StatisticsService.getChartData24h(monitorId);
+          break;
+        case '7d': {
+          const sevenDaysAgo = StatisticsService.get7DaysAgo();
+          const now = new Date();
+          hourlyStats = await StatisticsService.getHourlyStatistics(monitorId, {
+            startTime: StatisticsService.formatDateForAPI(sevenDaysAgo),
+            endTime: StatisticsService.formatDateForAPI(now),
+          });
+          chartStats = await StatisticsService.getChartData(monitorId, {
+            startTime: StatisticsService.formatDateForAPI(sevenDaysAgo),
+            endTime: StatisticsService.formatDateForAPI(now),
+          });
+          break;
+        }
+        case '30d': {
+          const thirtyDaysAgo = StatisticsService.get30DaysAgo();
+          const now30 = new Date();
+          hourlyStats = await StatisticsService.getHourlyStatistics(monitorId, {
+            startTime: StatisticsService.formatDateForAPI(thirtyDaysAgo),
+            endTime: StatisticsService.formatDateForAPI(now30),
+          });
+          chartStats = await StatisticsService.getChartData(monitorId, {
+            startTime: StatisticsService.formatDateForAPI(thirtyDaysAgo),
+            endTime: StatisticsService.formatDateForAPI(now30),
+          });
+          break;
+        }
+        case 'custom':
+          // Для произвольных дат используем отдельную функцию
+          break;
+      }
+
+      // Обновляем состояние только если данные изменились
+      const prevData = prevDataRef.current;
+      const hourlyStatsChanged = JSON.stringify(prevData.hourlyStats) !== JSON.stringify(hourlyStats);
+      const chartStatsChanged = JSON.stringify(prevData.chartStats) !== JSON.stringify(chartStats);
+
+      if (hourlyStatsChanged) {
+        setHourlyStatistics(hourlyStats);
+        prevDataRef.current.hourlyStats = hourlyStats;
+      }
+
+      if (chartStatsChanged) {
+        setStatisticsChartData(chartStats);
+        prevDataRef.current.chartStats = chartStats;
+      }
+    } catch (error) {
+      console.error('Ошибка тихого обновления статистики:', error);
+    }
+  }, []);
+
+  // Обработчики для изменения временного диапазона
+  const handleTimeRangeChange = (range: TimeRange) => {
+    setSelectedTimeRange(range);
+    if (id && range !== 'custom') {
+      loadStatistics(Number(id), range);
+    }
+  };
+
+  const handleCustomDateChange = (startDate: string, endDate: string) => {
+    setCustomStartDate(startDate);
+    setCustomEndDate(endDate);
+    if (id && startDate && endDate) {
+      // Вызываем loadStatistics с новыми датами напрямую
+      loadStatisticsWithCustomDates(Number(id), startDate, endDate);
+    }
+  };
+
+  // Отдельная функция для загрузки статистики с произвольными датами
+  const loadStatisticsWithCustomDates = useCallback(async (monitorId: number, startDate: string, endDate: string) => {
+    if (!monitorId || !startDate || !endDate) return;
+
+    setStatisticsLoading(true);
+    try {
+      console.log('Loading custom statistics with dates:', { startDate, endDate });
+
+      const hourlyStats = await StatisticsService.getHourlyStatistics(monitorId, {
+        startTime: StatisticsService.formatDateForAPI(new Date(startDate)),
+        endTime: StatisticsService.formatDateForAPI(new Date(endDate)),
+      });
+      const chartStats = await StatisticsService.getChartData(monitorId, {
+        startTime: StatisticsService.formatDateForAPI(new Date(startDate)),
+        endTime: StatisticsService.formatDateForAPI(new Date(endDate)),
+      });
+
+      setHourlyStatistics(hourlyStats);
+      setStatisticsChartData(chartStats);
+    } catch (error) {
+      console.error('Ошибка загрузки статистики:', error);
+      setHourlyStatistics([]);
+      setStatisticsChartData([]);
+    } finally {
+      setStatisticsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     const performRefresh = async () => {
@@ -20,24 +205,54 @@ export default function UrlDetails() {
       setLoading(false);
     };
 
+    const performSilentRefresh = async () => {
+      if (!id) return;
+      // Обновляем данные без изменения состояния загрузки
+      await refreshOne(Number(id));
+      const newItem = getById(Number(id)) ?? null;
+
+      // Обновляем состояние только если данные действительно изменились
+      setItem(prevItem => {
+        if (!prevItem || !newItem) return newItem;
+
+        // Проверяем ключевые поля, которые могут измениться
+        if (
+          prevItem.currentStatus !== newItem.currentStatus ||
+          prevItem.lastResponseTimeMs !== newItem.lastResponseTimeMs ||
+          prevItem.lastResponseCode !== newItem.lastResponseCode ||
+          prevItem.lastCheckedAt !== newItem.lastCheckedAt ||
+          prevItem.lastErrorMessage !== newItem.lastErrorMessage
+        ) {
+          return newItem;
+        }
+
+        return prevItem; // Данные не изменились, не обновляем состояние
+      });
+
+      // Также обновляем статистику тихо, если она не в режиме загрузки
+      if (!statisticsLoading && selectedTimeRange !== 'custom') {
+        loadStatisticsSilently(Number(id), selectedTimeRange);
+      }
+    };
+
     performRefresh();
 
     // Устанавливаем интервал для автоматического обновления каждые 30 секунд
     const interval = setInterval(() => {
-      performRefresh();
+      performSilentRefresh();
     }, 30000); // 30 секунд
 
     // Очищаем интервал при размонтировании компонента
     return () => clearInterval(interval);
-  }, [id, getById, refreshOne]);
+  }, [id, getById, refreshOne, statisticsLoading, selectedTimeRange, loadStatisticsSilently]);
 
-  const chartData = useMemo(() => {
-    if (!item) return [];
-    return item.lastCheckedAt ? [{
-      time: new Date(item.lastCheckedAt).toLocaleString(),
-      ok: item.currentStatus === "UP" ? 1 : 0,
-    }] : [];
-  }, [item]);
+  // Загружаем статистику при изменении ID или временного диапазона
+  useEffect(() => {
+    if (id && selectedTimeRange !== 'custom') {
+      loadStatistics(Number(id), selectedTimeRange);
+    }
+  }, [id, selectedTimeRange, loadStatistics]);
+
 
   const handleToggle = async () => {
     if (!id || !item) return;
@@ -245,51 +460,37 @@ export default function UrlDetails() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm mb-6">
-        <div className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">История проверок</h3>
-          {chartData.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-gray-500 dark:text-gray-400 mb-2">Нет данных для отображения</div>
-              <div className="text-sm text-gray-400 dark:text-gray-500">Данные появятся после первых проверок</div>
-            </div>
-          ) : (
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis
-                    dataKey="time"
-                    tick={{ fill: "#6b7280", fontSize: 12 }}
-                    axisLine={{ stroke: "#e5e7eb" }}
-                  />
-                  <YAxis
-                    tick={{ fill: "#6b7280", fontSize: 12 }}
-                    axisLine={{ stroke: "#e5e7eb" }}
-                    domain={[0, 1]}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#f9fafb',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      color: '#374151'
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="ok"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={{ fill: '#3b82f6', strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, stroke: '#3b82f6', strokeWidth: 2 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </div>
+
+      {/* Статистика */}
+      <div className="mb-6">
+        <TimeRangeSelector
+          selectedRange={selectedTimeRange}
+          onRangeChange={handleTimeRangeChange}
+          customStartDate={customStartDate}
+          customEndDate={customEndDate}
+          onCustomDateChange={handleCustomDateChange}
+        />
       </div>
+
+      {/* Почасовая статистика */}
+      <div className="mb-6">
+        <StatisticsCard
+          statistics={hourlyStatistics}
+          title="Почасовая статистика"
+          loading={statisticsLoading}
+        />
+      </div>
+
+      {/* График времени ответа */}
+      <div className="mb-6">
+        <StatisticsChart
+          data={statisticsChartData}
+          title="График времени ответа"
+          loading={statisticsLoading}
+          type="line"
+        />
+      </div>
+
     </div>
   );
 }
