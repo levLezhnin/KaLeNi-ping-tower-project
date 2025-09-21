@@ -19,6 +19,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      "/api/v1/statistics": {
+        target: "http://statistics-service:8084",
+        changeOrigin: true,
+        secure: false,
+      },
       "/api/v1/telegramNotifications": {
         target: "http://notification-service:8083",
         changeOrigin: true,
@@ -29,8 +34,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         bypass: (req) => {
-          if (req.url.startsWith("/api/auth") || req.url.startsWith("/api/v1/users") || req.url.startsWith("/api/v1/telegramNotifications")) {
-            return req.url;
+          if (req.url.startsWith("/api/auth") ||
+            req.url.startsWith("/api/v1/users") ||
+            req.url.startsWith("/api/v1/statistics") ||
+            req.url.startsWith("/api/v1/telegramNotifications")) {
+              return req.url;
           }
         },
       },
