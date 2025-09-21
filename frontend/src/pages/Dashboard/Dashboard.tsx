@@ -15,7 +15,7 @@ function StatusDot({ status }: { status: MonitorDetailResponse["currentStatus"] 
         ? "bg-red-500"
         : status === "PAUSED"
           ? "bg-yellow-400"
-          : "bg-gray-400"; // UNKNOWN or undefined
+          : "bg-gray-400";
   return <span className={`inline-block w-3 h-3 rounded-full ${cls}`}></span>;
 }
 

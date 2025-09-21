@@ -53,7 +53,7 @@ const TelegramBotModal: React.FC<TelegramBotModalProps> = ({ open, onClose, mode
                         rel="noopener noreferrer"
                         className="text-blue-600 dark:text-blue-400 underline break-all text-center font-semibold text-lg"
                     >
-                        {link}
+                        Ссылка на бота
                     </a>
                 </div>
                 <div className="mt-8 flex gap-3">
