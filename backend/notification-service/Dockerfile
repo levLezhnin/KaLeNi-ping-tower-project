@@ -37,7 +37,7 @@ ENV PATH="/opt/jre/bin:${PATH}" \
     JAVA_TOOL_OPTIONS="-XX:+UseG1GC -XX:+UseStringDeduplication -XX:MaxRAMPercentage=75.0"
 
 # Expose application port
-EXPOSE 8082
+EXPOSE 8083
 
 # Set the entry point with optimized JVM flags
 ENTRYPOINT ["/opt/jre/bin/java", "-jar", "/opt/app/app.jar"]
