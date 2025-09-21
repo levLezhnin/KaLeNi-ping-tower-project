@@ -15,15 +15,13 @@ function arrayBufferToBase64(buffer: ArrayBuffer): Promise<string> {
 
 export const telegramService = {
     async getSubscribeLink(userId: string | number): Promise<string> {
-        const { data } = await api.get(`/api/v1/telegramNotifications/getSubscribeLink`, {
-            data: userId,
+        const { data } = await api.get(`/api/v1/telegramNotifications/getSubscribeLink/${userId}`, {
             headers: { 'Content-Type': 'application/json' },
         });
         return data;
     },
     async getSubscribeQrCode(userId: string | number): Promise<string> {
-        const { data } = await api.get(`/api/v1/telegramNotifications/getSubscribeQrCode`, {
-            data: userId,
+        const { data } = await api.get(`/api/v1/telegramNotifications/getSubscribeQrCode/${userId}`, {
             headers: { 'Content-Type': 'application/json' },
             responseType: "arraybuffer",
         });

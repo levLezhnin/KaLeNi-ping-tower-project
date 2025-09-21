@@ -20,7 +20,7 @@ export default defineConfig({
         secure: false,
       },
       "/api/v1/telegramNotifications": {
-        target: "http://user-service:8083",
+        target: "http://notification-service:8083",
         changeOrigin: true,
         secure: false,
       },
