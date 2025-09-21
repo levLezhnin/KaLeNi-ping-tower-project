@@ -181,6 +181,7 @@ public class EnhancedPingService {
     private PingResultDto createErrorResult(MonitorConfigDto config, Throwable throwable, int responseTime) {
         PingStatus status = PingStatus.ERROR;
         String errorMessage = throwable.getMessage();
+        int code = 500;
 
         switch (throwable) {
             case TimeoutException timeoutException -> {
@@ -212,6 +213,7 @@ public class EnhancedPingService {
         return PingResultDto.builder()
                 .monitorId(config.getMonitorId())
                 .status(status)
+                .responseCode(code)
                 .responseTimeMs(responseTime)
                 .errorMessage(errorMessage)
                 .timestamp(Instant.now())

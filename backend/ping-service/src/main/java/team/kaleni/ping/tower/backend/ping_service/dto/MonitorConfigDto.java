@@ -15,6 +15,7 @@ import java.util.Map;
 public class MonitorConfigDto {
     private Long monitorId;
     private String url;
+    private String name;
     private HttpMethod method;
     private Map<String, String> headers;
     private String requestBody;
