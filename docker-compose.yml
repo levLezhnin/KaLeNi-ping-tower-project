@@ -43,7 +43,7 @@ services:
       KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
       KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 1@kafka:${KAFKA_CONTROLLER_PORT}
       KAFKA_CFG_NODE_ID: 1
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: false
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: true
       KAFKA_HEAP_OPTS: -Xmx512m -Xms512m
     volumes:
       - kafka_data:/bitnami/kafka
@@ -153,9 +153,13 @@ services:
       PING_SCHEDULER_INTERVAL: ${PING_SCHEDULER_INTERVAL:-5000}
       PING_THREAD_POOL_SIZE: ${PING_THREAD_POOL_SIZE:-10}
       PING_BATCH_SIZE: ${PING_BATCH_SIZE:-50}
+      # Kafka
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:9092"
+      SPRING_KAFKA_NOTIFICATION_TOPIC: "notifications"
     depends_on:
       - redis
     networks:
+      - kafka-network
       - ping_app_network
     restart: unless-stopped
 

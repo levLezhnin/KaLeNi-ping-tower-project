@@ -32,8 +32,10 @@ public class EmailNotificationSender implements NotificationSender {
             try (var inputStream = Objects.requireNonNull(
                     getClass().getResourceAsStream("/html-templates/email-content.html"))) {
 
-                String htmlContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8).formatted(message);
-                helper.setText(htmlContent, true);
+                String htmlContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                String[] parts = htmlContent.split("%s");
+                String htmlFormatted = parts[0] + message + parts[1];
+                helper.setText(htmlFormatted, true);
             } catch (IOException e) {
                 log.error("HTML-файл формы не найден!");
                 return;

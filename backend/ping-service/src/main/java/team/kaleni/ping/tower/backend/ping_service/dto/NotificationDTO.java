@@ -1,4 +1,4 @@
-package team.kaleni.notificationservice.dto;
+package team.kaleni.ping.tower.backend.ping_service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

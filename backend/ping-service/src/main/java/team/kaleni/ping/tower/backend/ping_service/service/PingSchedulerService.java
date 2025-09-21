@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import team.kaleni.ping.tower.backend.ping_service.dto.MonitorConfigDto;
 import team.kaleni.ping.tower.backend.ping_service.dto.PingResultDto;
+import team.kaleni.ping.tower.backend.ping_service.notifications.NotificationSender;
 
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,8 @@ public class PingSchedulerService {
 
 //    @Qualifier("pingExecutorService")
     private final ExecutorService executorService;
+
+    private final NotificationSender notificationSender;
 
     @Value("${ping.batch.size:50}")
     private int batchSize;
@@ -88,6 +91,11 @@ public class PingSchedulerService {
                 });
     }
 
+    private boolean isPingSuccessful(PingResultDto pingResultDto) {
+        return pingResultDto.getErrorMessage() == null &&
+                (200 <= pingResultDto.getResponseCode() && pingResultDto.getResponseCode() <= 399);
+    }
+
     /**
      * Асинхронная обработка одного монитора
      */
@@ -105,6 +113,7 @@ public class PingSchedulerService {
                 }
 
                 MonitorConfigDto config = configOpt.get();
+                log.info("{}, {}, {}", config.getMonitorId(), config.getUrl(), config.getOwnerId());
                 // todo: check if monitor is active
 
                 // 2. Выполняем пинг
@@ -129,6 +138,11 @@ public class PingSchedulerService {
 
                 log.debug("Successfully processed monitor {} with status {}",
                         monitorId, pingResult.getStatus());
+
+                // 6. Если пинг был неуспешен - отправляем об этом уведомление
+                if (!isPingSuccessful(pingResult)) {
+                    notificationSender.sendNotification(config.getOwnerId(), config.getName(), pingResult);
+                }
 
             } catch (Exception e) {
                 log.error("Error processing monitor {}: {}", monitorId, e.getMessage());

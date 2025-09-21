@@ -19,6 +19,7 @@ public class UserMapper implements BaseDtoDomainMapper<UserInsertDtoRequest, Use
                 .id(domain.getId())
                 .email(domain.getEmail())
                 .username(domain.getUsername())
+                .telegramChatId(domain.getTelegramChatId())
                 .build();
     }
 

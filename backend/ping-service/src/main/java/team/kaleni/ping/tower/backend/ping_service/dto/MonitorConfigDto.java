@@ -14,6 +14,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class MonitorConfigDto {
     private Long monitorId;
+    private Long ownerId;
     private String url;
     private String name;
     private HttpMethod method;
