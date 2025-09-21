@@ -7,6 +7,7 @@ import com.clickhouse.data.ClickHouseRecord;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import team.kaleni.ping.tower.backend.statistics_service.dto.ChartDataPointDto;
 import team.kaleni.ping.tower.backend.statistics_service.dto.PingResultDto;
 
 import java.time.LocalDateTime;
@@ -63,7 +64,7 @@ public class ClickHouseStatisticsService {
                 // Парсим TabSeparated построчно
                 for (ClickHouseRecord record : response.records()) {
                     String fullRow = record.getValue(0).asString();
-                    if (fullRow.length()<2){
+                    if (fullRow.length() < 2) {
                         continue;
                     }
                     log.debug("Raw row: {}", fullRow);
@@ -77,9 +78,10 @@ public class ClickHouseStatisticsService {
                                 .pingTimestamp(LocalDateTime.parse(parts[1], DateTimeFormatter.ofPattern("yyyy-MM-dd " +
                                         "HH:mm:ss.SSS")))
                                 .status(parts[2])
-                                .responseTimeMs("\\N".equals(parts[3]) ? null : Integer.parseInt(parts[3]))
-                                .responseCode("\\N".equals(parts[4]) ? null : Integer.parseInt(parts[4]))
-                                .errorMessage("\\N".equals(parts[5]) ? null : parts[5])
+                                // Правильная обработка NULL значений
+                                .responseTimeMs(isNullValue(parts[3]) ? null : Integer.parseInt(parts[3]))
+                                .responseCode(isNullValue(parts[4]) ? null : Integer.parseInt(parts[4]))
+                                .errorMessage(isNullValue(parts[5]) ? null : parts[5])
                                 .url(parts[6])
                                 .build();
                         results.add(dto);
@@ -95,5 +97,99 @@ public class ClickHouseStatisticsService {
 
         return results;
     }
+
+
+    /**
+     * Получить данные для графика (только нужные поля)
+     */
+    public List<ChartDataPointDto> getChartData(Long monitorId, LocalDateTime startTime, LocalDateTime endTime) {
+        log.info("Getting chart data for monitor {} from {} to {}", monitorId, startTime, endTime);
+
+        String startTimeStr = startTime.format(FORMATTER);
+        String endTimeStr = endTime.format(FORMATTER);
+
+        String query = String.format("""
+        SELECT DISTINCT
+        ping_timestamp,
+        status,
+        response_time_ms,
+        response_code
+        FROM ping_history.ping_results
+        WHERE monitor_id = %d
+        AND ping_timestamp >= '%s'
+        AND ping_timestamp <= '%s'
+        ORDER BY ping_timestamp
+        FORMAT TabSeparated
+        """, monitorId, startTimeStr, endTimeStr);
+
+        List<ChartDataPointDto> results = new ArrayList<>();
+
+        try {
+            log.debug("Executing chart data query: {}", query);
+
+            try (ClickHouseResponse response = clickHouseClient
+                    .read(clickHouseNode)
+                    .query(query)
+                    .executeAndWait()) {
+
+                for (ClickHouseRecord record : response.records()) {
+                    String fullRow = record.getValue(0).asString();
+                    if (fullRow.length() < 2) {
+                        continue;
+                    }
+
+                    log.debug("Raw chart row: {}", fullRow);
+
+                    String[] parts = fullRow.split("\\t");
+                    if (parts.length >= 4) {
+                        try {
+                            // Более надежная обработка пустых значений
+                            Integer responseTimeMs = null;
+                            if (parts.length > 2 && !isNullValue(parts[2])) {
+                                responseTimeMs = Integer.parseInt(parts[2]);
+                            }
+
+                            Integer responseCode = null;
+                            if (parts.length > 3 && !isNullValue(parts[3])) {
+                                responseCode = Integer.parseInt(parts[3]);
+                            }
+
+                            ChartDataPointDto dto = ChartDataPointDto.builder()
+                                    .pingTimestamp(LocalDateTime.parse(parts[0],
+                                            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")))
+                                    .status(parts[1])
+                                    .responseTimeMs(responseTimeMs)
+                                    .responseCode(responseCode)
+                                    .build();
+
+                            results.add(dto);
+                            log.debug("Parsed chart data point: {}", dto);
+
+                        } catch (Exception e) {
+                            log.warn("Error parsing chart data row: {} - {}", fullRow, e.getMessage());
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            log.info("Retrieved {} chart data points for monitor {}", results.size(), monitorId);
+
+        } catch (Exception e) {
+            log.error("Error getting chart data for monitor {}: {}", monitorId, e.getMessage(), e);
+        }
+
+        return results;
+    }
+
+
+    // Добавить метод для проверки NULL значений
+    private boolean isNullValue(String value) {
+        return value == null ||
+                "\\N".equals(value) ||
+                value.trim().isEmpty() ||
+                "NULL".equalsIgnoreCase(value.trim());
+    }
+
 
 }

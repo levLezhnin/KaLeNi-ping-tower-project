@@ -3,6 +3,7 @@ package team.kaleni.ping.tower.backend.statistics_service.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import team.kaleni.ping.tower.backend.statistics_service.dto.ChartDataPointDto;
 import team.kaleni.ping.tower.backend.statistics_service.dto.HourlyStatsDto;
 import team.kaleni.ping.tower.backend.statistics_service.dto.PingResultDto;
 
@@ -101,4 +102,25 @@ public class StatisticsService {
                 .maxResponseTime(maxResponseTime)
                 .build();
     }
+
+    /**
+     * Получить данные для графика за последние 24 часа
+     */
+    public List<ChartDataPointDto> getChartData24h(Long monitorId) {
+        LocalDateTime endTime = LocalDateTime.now();
+        LocalDateTime startTime = endTime.minusHours(24);
+
+        log.info("Getting chart data for monitor {} for last 24h", monitorId);
+        return getChartData(monitorId, startTime, endTime);
+    }
+
+    /**
+     * Получить данные для графика за произвольный период
+     */
+    public List<ChartDataPointDto> getChartData(Long monitorId, LocalDateTime startTime, LocalDateTime endTime) {
+        log.info("Getting chart data for monitor {} from {} to {}", monitorId, startTime, endTime);
+        return clickHouseService.getChartData(monitorId, startTime, endTime);
+    }
+
+
 }

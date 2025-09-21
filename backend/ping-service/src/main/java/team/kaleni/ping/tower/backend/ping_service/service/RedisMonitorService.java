@@ -191,6 +191,7 @@ public class RedisMonitorService {
                 .monitorId(monitorId)
                 .url(parseString(map.get("url")))
                 .method(parseHttpMethod(map.get("method")))
+                .name(parseString(map.get("name")))
                 .headers(parseHeaders(map.get("headers")))
                 .requestBody(parseString(map.get("requestBody")))
                 .contentType(parseString(map.get("contentType")))
