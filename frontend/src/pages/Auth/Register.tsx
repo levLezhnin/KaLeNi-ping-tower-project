@@ -30,6 +30,7 @@ export default function Register() {
     if (errs.length) { setErrors(errs.join(". ")); return; }
     setErrors(null);
     await authService.register({ username, email, password: pwd });
+    localStorage.setItem("show_telegram_modal", "1");
     navigate("/dashboard");
   };
 

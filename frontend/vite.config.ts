@@ -19,12 +19,17 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      "/api/v1/telegramNotifications": {
+        target: "http://user-service:8083",
+        changeOrigin: true,
+        secure: false,
+      },
       "/api": {
         target: "http://url-service:8080",
         changeOrigin: true,
         secure: false,
         bypass: (req) => {
-          if (req.url.startsWith("/api/auth") || req.url.startsWith("/api/v1/users")) {
+          if (req.url.startsWith("/api/auth") || req.url.startsWith("/api/v1/users") || req.url.startsWith("/api/v1/telegramNotifications")) {
             return req.url;
           }
         },
