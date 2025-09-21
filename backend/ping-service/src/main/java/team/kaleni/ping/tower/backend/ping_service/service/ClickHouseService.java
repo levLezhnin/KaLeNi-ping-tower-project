@@ -24,7 +24,7 @@ public class ClickHouseService {
     private final ClickHouseNode clickHouseNode;
 
     private static final String INSERT_PING_RESULT = """
-        INSERT INTO ping_results (
+        INSERT INTO ping_history.ping_results (
             monitor_id, ping_timestamp, status, response_time_ms,
             response_code, error_message, url, created_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -86,7 +86,7 @@ public class ClickHouseService {
 
         try {
             StringBuilder queryBuilder = new StringBuilder(
-                    "INSERT INTO ping_results (monitor_id, ping_timestamp, status, response_time_ms, " +
+                    "INSERT INTO ping_history.ping_results (monitor_id, ping_timestamp, status, response_time_ms, " +
                             "response_code, error_message, url, created_at) VALUES ");
 
             for (int i = 0; i < pingResults.size(); i++) {
@@ -128,7 +128,7 @@ public class ClickHouseService {
         String query = """
             SELECT monitor_id, ping_timestamp, status, response_time_ms,
                    response_code, error_message, url, created_at
-            FROM ping_results
+            FROM ping_history.ping_results
             WHERE monitor_id = ?
             ORDER BY ping_timestamp DESC
             LIMIT ?
