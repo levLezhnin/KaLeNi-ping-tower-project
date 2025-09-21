@@ -8,24 +8,24 @@ import java.time.Instant;
 
 @Data
 @Builder
-@Schema(name = "DeleteResponse", description = "Delete operation result")
+@Schema(name = "Ответ удаления монитора", description = "Результат операции удаления монитора")
 public class DeleteResponse {
 
-    @Schema(description = "Success flag", example = "true")
+    @Schema(description = "Флаг успешности операции", example = "true")
     private boolean success;
 
-    @Schema(description = "Deleted monitor ID", example = "123")
+    @Schema(description = "Идентификатор удаленного монитора", example = "123")
     private Long deletedId;
 
-    @Schema(description = "Deleted monitor name", example = "API Health Check")
+    @Schema(description = "Название удаленного монитора", example = "Проверка API здоровья")
     private String deletedName;
 
-    @Schema(description = "Deletion timestamp")
+    @Schema(description = "Время удаления монитора", example = "2025-09-21T08:30:00.000Z", format = "date-time")
     private Instant deletedAt;
 
-    @Schema(description = "Number of ping records deleted", example = "1247")
+    @Schema(description = "Количество удаленных записей пингов", example = "1247")
     private Integer deletedRecords;
 
-    @Schema(description = "Additional cleanup information", example = "Monitor successfully removed from all groups")
+    @Schema(description = "Дополнительная информация об очистке", example = "Монитор успешно удален из всех групп")
     private String message;
 }

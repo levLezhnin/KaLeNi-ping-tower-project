@@ -21,10 +21,6 @@ public interface MonitorGroupRepository extends JpaRepository<MonitorGroup, Long
     // ✅ Find by owner and id (for security - ensure user owns the group)
     Optional<MonitorGroup> findByIdAndOwnerId(Long id, Integer ownerId);
 
-    // 🔥 ИСПРАВЛЕНО: убрали LEFT JOIN FETCH g.monitors - теперь monitors хранят ссылку на group, а не наоборот
-    @Query("SELECT g FROM MonitorGroup g WHERE g.ownerId = :ownerId ORDER BY g.name ASC")
-    List<MonitorGroup> findByOwnerIdOrderByName(@Param("ownerId") Integer ownerId);
-
     // ✅ Find by name and owner excluding specific ID (for update validation)
     @Query("SELECT g FROM MonitorGroup g WHERE g.ownerId = :ownerId AND g.name = :name AND g.id != :excludeId")
     Optional<MonitorGroup> findByOwnerIdAndNameExcludingId(@Param("ownerId") Integer ownerId,

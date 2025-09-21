@@ -7,33 +7,33 @@ import team.kaleni.ping.tower.backend.url_service.entity.HttpMethod;
 
 @Data
 @Builder
-@Schema(name = "MonitorResponse", description = "Monitor creation response")
+@Schema(name = "Ответ создания монитора", description = "Результат операции создания нового монитора")
 public class MonitorResponse {
 
-    @Schema(description = "Operation result", example = "true")
+    @Schema(description = "Результат операции создания", example = "true")
     private boolean result;
 
-    @Schema(description = "Monitor ID", example = "123")
+    @Schema(description = "Идентификатор созданного монитора", example = "123")
     private Long id;
 
-    @Schema(description = "Monitor name", example = "API Health Check")
+    @Schema(description = "Название монитора", example = "Проверка API здоровья")
     private String name;
 
-    @Schema(description = "Monitor URL", example = "https://api.example.com/health")
+    @Schema(description = "URL монитора", example = "https://api.example.com/health")
     private String url;
 
-    @Schema(description = "HTTP method", example = "GET")
+    @Schema(description = "HTTP метод запроса", example = "GET", allowableValues = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"})
     private HttpMethod method;
 
-    @Schema(description = "Check interval in seconds", example = "300")
+    @Schema(description = "Интервал проверки в секундах", example = "300")
     private Integer intervalSeconds;
 
-    @Schema(description = "Group ID", example = "456")
+    @Schema(description = "Идентификатор группы мониторов", example = "456")
     private Long groupId;
 
-    @Schema(description = "Monitor enabled status", example = "true")
+    @Schema(description = "Статус активности монитора", example = "true")
     private Boolean enabled;
 
-    @Schema(description = "Error message if creation failed", example = "Invalid URL format")
+    @Schema(description = "Сообщение об ошибке при неудачном создании", example = "Некорректный формат URL")
     private String errorMessage;
 }

@@ -11,50 +11,50 @@ import lombok.Data;
 import java.util.Map;
 
 @Data
-@Schema(title = "Create monitor request")
+@Schema(name = "Запрос создания монитора", description = "Данные для создания нового монитора веб-сервиса")
 public class CreateMonitorRequest {
 
-    @NotBlank(message = "Monitor name is required")
-    @Size(max = 255, message = "Name must be at most 255 characters")
-    @Schema(description = "Monitor name", example = "API Health Check")
+    @NotBlank(message = "Имя монитора обязательно")
+    @Size(max = 255, message = "Имя должно содержать не более 255 символов")
+    @Schema(description = "Название монитора", example = "Проверка API здоровья")
     private String name;
 
-    @Size(max = 1000, message = "Description must be at most 1000 characters")
-    @Schema(description = "Monitor description", example = "Checks API endpoint health")
+    @Size(max = 1000, message = "Описание должно содержать не более 1000 символов")
+    @Schema(description = "Описание назначения монитора", example = "Проверяет доступность эндпоинта API")
     private String description;
 
     // HTTP Configuration
-    @NotBlank(message = "URL is required")
-    @Size(max = 2048, message = "URL must be at most 2048 characters")
-    @Schema(description = "Target URL", example = "https://api.example.com/health")
+    @NotBlank(message = "URL обязателен")
+    @Size(max = 2048, message = "URL должен содержать не более 2048 символов")
+    @Schema(description = "Целевой URL для мониторинга", example = "https://api.example.com/health")
     private String url;
 
-    @Schema(description = "HTTP method", example = "GET")
+    @Schema(description = "HTTP метод запроса", example = "GET", allowableValues = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"})
     private String method = "GET";
 
-    @Schema(description = "Custom HTTP headers")
+    @Schema(description = "Дополнительные HTTP заголовки", example = "{\"Authorization\": \"Bearer token123\"}")
     private Map<String, String> headers;
 
-    @Schema(description = "Request body for POST requests", example = "{\"ping\": \"test\"}")
+    @Schema(description = "Тело запроса для POST/PUT запросов", example = "{\"ping\": \"test\"}")
     @JsonProperty("requestBody")
     private Object requestBodyRaw;
 
     @Size(max = 100)
-    @Schema(description = "Content-Type header", example = "application/json")
+    @Schema(description = "Тип содержимого Content-Type", example = "application/json")
     private String contentType;
 
     // Monitoring Configuration
-    @Min(value = 30, message = "Interval must be at least 30 seconds")
-    @Max(value = 86400, message = "Interval must be at most 24 hours")
-    @Schema(description = "Check interval in seconds", example = "300")
+    @Min(value = 30, message = "Интервал должен быть не менее 30 секунд")
+    @Max(value = 86400, message = "Интервал должен быть не более 24 часов")
+    @Schema(description = "Интервал проверки в секундах", example = "300", minimum = "30", maximum = "86400")
     private Integer intervalSeconds = 300;
 
-    @Min(value = 1000, message = "Timeout must be at least 1 second")
-    @Max(value = 300000, message = "Timeout must be at most 5 minutes")
-    @Schema(description = "Request timeout in milliseconds", example = "10000")
+    @Min(value = 1000, message = "Таймаут должен быть не менее 1 секунды")
+    @Max(value = 300000, message = "Таймаут должен быть не более 5 минут")
+    @Schema(description = "Таймаут запроса в миллисекундах", example = "10000", minimum = "1000", maximum = "300000")
     private Integer timeoutMs = 10000;
 
-    @Schema(description = "Group ID", example = "123")
+    @Schema(description = "Идентификатор группы мониторов", example = "123")
     private Long groupId;
 
     @JsonIgnore
@@ -72,7 +72,7 @@ public class CreateMonitorRequest {
             ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(requestBodyRaw);
         } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("Invalid requestBody format", e);
+            throw new IllegalArgumentException("Некорректный формат requestBody", e);
         }
     }
 
@@ -80,5 +80,3 @@ public class CreateMonitorRequest {
         this.requestBodyRaw = requestBody;
     }
 }
-
-

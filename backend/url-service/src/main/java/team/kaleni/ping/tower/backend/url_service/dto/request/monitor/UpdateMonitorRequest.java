@@ -9,48 +9,48 @@ import team.kaleni.ping.tower.backend.url_service.entity.HttpMethod;
 import java.util.Map;
 
 @Data
-@Schema(name = "UpdateMonitorRequest")
+@Schema(name = "Запрос обновления монитора", description = "Данные для обновления существующего монитора")
 public class UpdateMonitorRequest {
 
     // Basic fields
-    @Size(max = 255, message = "Name must be at most 255 characters")
-    @Schema(description = "Monitor name", example = "Updated Website Monitor")
+    @Size(max = 255, message = "Имя должно содержать не более 255 символов")
+    @Schema(description = "Название монитора", example = "Обновленный монитор веб-сайта")
     private String name;
 
-    @Size(max = 1000, message = "Description must be at most 1000 characters")
-    @Schema(description = "Monitor description", example = "Updated description")
+    @Size(max = 1000, message = "Описание должно содержать не более 1000 символов")
+    @Schema(description = "Описание назначения монитора", example = "Обновленное описание")
     private String description;
 
-    @Size(max = 2048, message = "URL must be at most 2048 characters")
-    @Schema(description = "Target URL", example = "https://api.updated.com/health")
+    @Size(max = 2048, message = "URL должен содержать не более 2048 символов")
+    @Schema(description = "Целевой URL для мониторинга", example = "https://api.updated.com/health")
     private String url;
 
-    @Schema(description = "HTTP method", example = "POST")
+    @Schema(description = "HTTP метод запроса", example = "POST", allowableValues = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"})
     private HttpMethod method;
 
-    @Schema(description = "Custom HTTP headers")
+    @Schema(description = "Дополнительные HTTP заголовки", example = "{\"Authorization\": \"Bearer newtoken\"}")
     private Map<String, String> headers;
 
-    @Size(max = 4000, message = "Request body must be at most 4000 characters")
-    @Schema(description = "Request body for POST requests", example = "{\"updated\": \"data\"}")
+    @Size(max = 4000, message = "Тело запроса должно содержать не более 4000 символов")
+    @Schema(description = "Тело запроса для POST/PUT запросов", example = "{\"updated\": \"data\"}")
     private String requestBody;
 
     @Size(max = 100)
-    @Schema(description = "Content-Type header", example = "application/json")
+    @Schema(description = "Тип содержимого Content-Type", example = "application/json")
     private String contentType;
 
     // Monitoring Configuration
-    @Min(value = 30, message = "Interval must be at least 30 seconds")
-    @Schema(description = "Check interval in seconds", example = "180")
+    @Min(value = 30, message = "Интервал должен быть не менее 30 секунд")
+    @Schema(description = "Интервал проверки в секундах", example = "180", minimum = "30")
     private Integer intervalSeconds;
 
-    @Min(value = 1000, message = "Timeout must be at least 1000 milliseconds")
-    @Schema(description = "Timeout in milliseconds", example = "8000")
+    @Min(value = 1000, message = "Таймаут должен быть не менее 1000 миллисекунд")
+    @Schema(description = "Таймаут запроса в миллисекундах", example = "8000", minimum = "1000")
     private Integer timeoutMs;
 
-    @Schema(description = "Group ID", example = "5")
+    @Schema(description = "Идентификатор группы мониторов", example = "5")
     private Long groupId;
 
-    @Schema(description = "Enable/disable monitor", example = "true")
+    @Schema(description = "Включить/выключить монитор", example = "true")
     private Boolean enabled;
 }
