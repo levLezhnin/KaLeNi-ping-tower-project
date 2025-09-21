@@ -1,0 +1,34 @@
+server:
+  port: ${NOTIFICATION_SERVICE_PORT}
+
+spring:
+  application:
+    name: ping-tower-notification-service
+    subscribe-path: ${NOTIFICATION_SERVICE_TELEGRAM_SUBSCRIBE_PATH}
+    unsubscribe-path: ${NOTIFICATION_SERVICE_TELEGRAM_UNSUBSCRIBE_PATH}
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${NOTIFICATION_SERVICE_GMAIL}
+    password: ${NOTIFICATION_SERVICE_APP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    properties:
+      spring.json.trusted.packages: "*"
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    notification-topic: notification-topic
+    consumer-group-id: notification-consumer-group
+
+bot:
+  name: "Ping Tower Notifications Bot"
+  token: ${NOTIFICATION_SERVICE_TELEGRAM_BOT_TOKEN:}
+  link: "https://t.me/PingTowerNotificationsBot"
