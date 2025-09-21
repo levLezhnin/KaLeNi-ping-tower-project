@@ -197,6 +197,7 @@ services:
       NOTIFICATION_SERVICE_TELEGRAM_UNSUBSCRIBE_PATH: ${NOTIFICATION_SERVICE_TELEGRAM_UNSUBSCRIBE_PATH}
     networks:
       - kafka-network
+      - ping_app_network
     restart: unless-stopped
 
   # Frontend приложение
